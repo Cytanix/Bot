@@ -22,7 +22,7 @@ intents.members = True
 async def cog_loader(bot_instance: commands.Bot) -> None:
     """This function loads all cogs in the cogs folder plus jishaku."""
     await bot_instance.load_extension('jishaku')
-    for file in os.listdir('../cogs'):
+    for file in os.listdir('cogs'):
         if file.endswith('.py') and file != '__init__.py':
             cog_name = file[:-3]
             try:
@@ -43,7 +43,7 @@ class Cytanix(commands.Bot):
 
     @staticmethod
     def load_command_count():
-        file_path = "../utils/command_count.json"  # Adjust the path
+        file_path = "utils/command_count.json"  # Adjust the path
 
         # If the file does not exist, create it with default data
         if not os.path.exists(file_path):
@@ -71,7 +71,7 @@ class Cytanix(commands.Bot):
 
     def save_command_count(self):
         """Saves the command count to a JSON file."""
-        with open("../utils/command_count.json", "w") as f:
+        with open("utils/command_count.json", "w") as f:
             json.dump({"count": self.command_count}, f)
 
     async def on_command(self, ctx):
