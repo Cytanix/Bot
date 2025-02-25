@@ -74,11 +74,10 @@ class Cytanix(commands.Bot):
         with open("utils/command_count.json", "w") as f:
             json.dump({"count": self.command_count}, f)
 
-    async def on_command(self, ctx):
+    async def on_command_completion(self, ctx):
         """Triggered when a command is used."""
         self.command_count += 1
         self.save_command_count()
-        await super().on_command(ctx)
 
     async def setup_hook(self) -> None:
         """This function is called before the bot is ready, to load cogs."""
