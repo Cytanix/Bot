@@ -93,3 +93,5 @@ migrations/versions/__pycache__/
 
 # Discord.py cache (if using local intents storage)
 discord_cache/
+
+utils/command_count.json
