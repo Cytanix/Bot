@@ -7,20 +7,19 @@ import os
 import asyncio
 from datetime import datetime as dt, timezone as tz
 from dotenv import load_dotenv
-from sqlalchemy import Column, BigInteger, String, Boolean, Index, create_engine, Integer, ForeignKeyConstraint
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy import Column, BigInteger, String, Boolean, Index, Integer, ForeignKeyConstraint
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 load_dotenv()
 Base = declarative_base()
-engine = create_async_engine(
+engine: AsyncEngine = create_async_engine(
     os.getenv("DATABASE_URL"),
     pool_size=10,
     max_overflow=20,
     pool_timeout=30,
     echo=True)
-sync_engine = create_engine(os.getenv("DATABASE_URL").replace("+asyncpg", ""))
-session_factory = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+session_factory = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 class Logs(Base):
     """Model for the logging table"""
@@ -92,7 +91,8 @@ class Levels(Base):
 
 
 async def create_tables():
-        Base.metadata.create_all(sync_engine)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
 
 if __name__ == '__main__':
