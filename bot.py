@@ -38,7 +38,7 @@ class Cytanix(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage = "Development"
-        self.version = "0.0.1"
+        self.version = "0.0.5"
         self.session_command_count = 0
         self.command_count = self.load_command_count()  # Load saved count
 
