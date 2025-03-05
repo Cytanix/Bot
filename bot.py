@@ -102,8 +102,12 @@ class Cytanix(commands.Bot): # type: ignore
 
 bot = Cytanix(command_prefix=commands.when_mentioned_or("!"), intents=intents)
 
+if TYPE_CHECKING:
+    if os.name == "nt":
+        from asyncio import WindowsSelectorEventLoopPolicy
+
 if __name__ == '__main__':
     if os.name == "nt":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) # type: ignore
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     bot.run(os.getenv("TOKEN"))
