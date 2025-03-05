@@ -106,5 +106,7 @@ bot = Cytanix(command_prefix=commands.when_mentioned_or("!"), intents=intents)
 if __name__ == '__main__':
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    elif TYPE_CHECKING:
+        pass
 
     bot.run(os.getenv("TOKEN"))
