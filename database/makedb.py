@@ -2,6 +2,7 @@
 #
 # This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
 # To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/ or see the LICENSE file.
+# pylint: disable=R0903
 """This file contains the database logic, including the tables and connection data"""
 import os
 import asyncio
@@ -91,8 +92,9 @@ class Levels(Base): # type: ignore
 
 
 async def create_tables() -> None:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+    """Create the tables"""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 if __name__ == '__main__':
