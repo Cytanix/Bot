@@ -2,6 +2,7 @@
 #
 # This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
 # To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/ or see the LICENSE file.
+"""This file contains a function to test the connection to the database"""
 from sqlalchemy.ext.asyncio import create_async_engine
 import asyncio
 import os
@@ -10,7 +11,7 @@ load_dotenv()
 
 URL = os.getenv("DATABASE_URL")
 
-async def test_connection():
+async def test_connection() -> None:
     try:
         engine = create_async_engine(URL, echo=False)
         async with engine.begin() as conn:
