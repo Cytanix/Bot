@@ -10,9 +10,11 @@ import asyncio
 import json
 import os
 import traceback
+from typing import TYPE_CHECKING
+
 import discord
 from discord.ext import commands
-from discord.ext.commands import ExtensionError
+from discord.ext.commands import ExtensionError, Context
 from dotenv import load_dotenv
 
 
@@ -22,6 +24,9 @@ intents.guilds = True
 intents.messages = True
 intents.message_content = True
 intents.members = True
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 async def cog_loader(bot_instance: commands.Bot) -> None:
@@ -37,9 +42,10 @@ async def cog_loader(bot_instance: commands.Bot) -> None:
                 print(f'Failed to load cog {cog_name}: {str(e)}')
                 print(traceback.format_exc())
 
-class Cytanix(commands.Bot):
+
+class Cytanix(commands.Bot): # type: ignore
     """This is the main bot class."""
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None: # type: ignore
         super().__init__(*args, **kwargs)
         self.stage = "Development"
         self.version = "0.0.5"
@@ -47,7 +53,7 @@ class Cytanix(commands.Bot):
         self.command_count = self.load_command_count()  # Load saved count
 
     @staticmethod
-    def load_command_count():
+    def load_command_count() -> int:
         file_path = "utils/command_count.json"  # Adjust the path
 
         # If the file does not exist, create it with default data
@@ -67,19 +73,19 @@ class Cytanix(commands.Bot):
         # Try to load the JSON data
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                return json.load(f).get("count", 0)
+                return int(json.load(f).get("count", 0))
         except json.JSONDecodeError:
             print("Invalid JSON detected. Resetting file.")
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump({"count": 0}, f, indent=2)
             return 0
 
-    def save_command_count(self):
+    def save_command_count(self) -> None:
         """Saves the command count to a JSON file."""
         with open("utils/command_count.json", "w") as f:
             json.dump({"count": self.command_count}, f)
 
-    async def on_command_completion(self, ctx):
+    async def on_command_completion(self) -> None:
         """Triggered when a command is used."""
         self.command_count += 1
         self.save_command_count()
@@ -88,7 +94,7 @@ class Cytanix(commands.Bot):
         """This function is called before the bot is ready, to load cogs."""
         await cog_loader(self)
 
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         """This function is called when the bot is ready."""
         print(f'Logged in as {self.user.name}')
         print("Ready to recieve commands!")
