@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import ExtensionError, Context
+from discord.ext.commands import ExtensionError
 from dotenv import load_dotenv
 
 
@@ -54,6 +54,7 @@ class Cytanix(commands.Bot): # type: ignore
 
     @staticmethod
     def load_command_count() -> int:
+        """Load the number of commands counted from the json file"""
         file_path = "utils/command_count.json"  # Adjust the path
 
         # If the file does not exist, create it with default data
@@ -82,7 +83,7 @@ class Cytanix(commands.Bot): # type: ignore
 
     def save_command_count(self) -> None:
         """Saves the command count to a JSON file."""
-        with open("utils/command_count.json", "w") as f:
+        with open("utils/command_count.json", "w", encoding="utf-8") as f:
             json.dump({"count": self.command_count}, f)
 
     async def on_command_completion(self) -> None:
