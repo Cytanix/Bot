@@ -6,6 +6,7 @@
 This is the main file for the bot.
 It contains the bot class and the main function to run the bot.
 """
+import platform
 import asyncio
 import json
 import os
@@ -102,12 +103,8 @@ class Cytanix(commands.Bot): # type: ignore
 
 bot = Cytanix(command_prefix=commands.when_mentioned_or("!"), intents=intents)
 
-if TYPE_CHECKING:
-    if os.name == "nt":
-        from asyncio import WindowsSelectorEventLoopPolicy
-
 if __name__ == '__main__':
-    if os.name == "nt":
+    if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     bot.run(os.getenv("TOKEN"))
