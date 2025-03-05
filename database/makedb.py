@@ -21,7 +21,7 @@ engine: AsyncEngine = create_async_engine(
     echo=True)
 session_factory = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
-class Logs(Base):
+class Logs(Base): # type: ignore
     """Model for the logging table"""
     __tablename__ = 'logs'
 
@@ -33,7 +33,7 @@ class Logs(Base):
     muterole = Column(BigInteger)
     muterole_channel = Column(BigInteger)
 
-class Punishments(Base):
+class Punishments(Base): # type: ignore
     """Model for the punishments table"""
     __tablename__ = 'punishments'
     __table_args__ = (
@@ -48,7 +48,7 @@ class Punishments(Base):
     moderator_id = Column(BigInteger, nullable=False)
     reason = Column(String, default="No reason provided")
 
-class CustomCommands(Base):
+class CustomCommands(Base): # type: ignore
     """Model for the custom commands table"""
     __tablename__ = 'custom_commands'
 
@@ -59,7 +59,7 @@ class CustomCommands(Base):
     image = Column(String) # or LargeBinary, if string the image will be stored base64 encoded
     nsfw = Column(Boolean)
 
-class Registration(Base):
+class Registration(Base): # type: ignore
     """Model for the registration table"""
     __tablename__ = 'registrations'
     user_id = Column(BigInteger, primary_key=True)
@@ -75,7 +75,7 @@ class Registration(Base):
     age_verified = Column(Boolean, default=False)
     artist_verified = Column(Boolean, default=False)
 
-class Levels(Base):
+class Levels(Base): # type: ignore
     """Model for the levels table"""
     __tablename__ = 'levels'
     __table_args__ = (
@@ -90,7 +90,7 @@ class Levels(Base):
     xp = Column(BigInteger, default=0)
 
 
-async def create_tables():
+async def create_tables() -> None:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
