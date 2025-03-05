@@ -7,25 +7,19 @@ import asyncio
 import os
 import sys
 import traceback
-from typing import Optional, TYPE_CHECKING
-from datetime import datetime as dt
+from typing import Optional
 import discord
 from discord.ext import commands
-from discord import app_commands
-from discord.ext.commands import Cog, ExtensionFailed, GuildNotFound, Context
+from discord.ext.commands import Cog, ExtensionFailed, Context
 from utils.logger import logger
 
-if TYPE_CHECKING:
-    from bot import Cytanix
-    from discord.ext.commands import Context
-
-class Owner(Cog):
+class Owner(Cog): # type: ignore
     """Owner commands"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="sync", hidden=True)
-    @commands.is_owner()
+    @commands.command(name="sync", hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore
     async def sync(self, ctx: Context) -> None:
         """Command to sync the tree"""
         await self.bot.tree.sync()
@@ -33,16 +27,16 @@ class Owner(Cog):
         await ctx.message.delete()
         logger.info("Commands synced")
 
-    @commands.command(name="coglist", hidden=True)
-    @commands.is_owner()
+    @commands.command(name="coglist", hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore
     async def coglist(self, ctx: Context) -> None:
         """List all loaded cogs"""
         loaded_cogs = "\n".join(self.bot.cogs.keys())
         await ctx.send(f"Loaded cogs:\n{loaded_cogs}")
         await ctx.message.delete()
 
-    @commands.command(name="say", hidden=True)
-    @commands.is_owner()
+    @commands.command(name="say", hidden=True)  # type: ignore
+    @commands.is_owner()  # type: ignore
     async def say(self, ctx: Context, *, message: Optional[str] = None) -> None:
         """Make the bot say something"""
         attachments = ctx.message.attachments
@@ -50,21 +44,19 @@ class Owner(Cog):
             await ctx.send("You need to provide either a message or attachments")
             return
         try:
+            files: list[bytes] = []
             if attachments:
-                files = []
                 for attachment in attachments:
-                    files.append = attachment.to_file()
-                    if message:
-                        await ctx.send(message, files=files)
-                    else:
-                        await ctx.send(files=files)
+                    files.append(attachment.to_file())  # Fix append call
+            if message:
+                await ctx.send(message, files=files)  # Send message with attachments if present
             else:
-                await ctx.send(message)
+                await ctx.send(files=files)  # Send only attachments if no message
         finally:
-            await ctx.message.delete()
+            await ctx.message.delete()  # Delete the original command message
 
-    @commands.command(name="cutie", hidden=True)
-    @commands.is_owner()
+    @commands.command(name="cutie", hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore
     async def cutie(self, ctx: Context, user: Optional[discord.Member] = None) -> None:
         """Everyone is a cutie, except me"""
         if user is None:
@@ -78,8 +70,8 @@ class Owner(Cog):
         else:
             await ctx.send(f"{user.mention} is a cutie!")
 
-    @commands.command(name="presence", hidden=True)
-    @commands.is_owner()
+    @commands.command(name="presence", hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore
     async def presence(self, ctx: Context, *, status: discord.Status) -> None:
         """Set the presence"""
         if not isinstance(status, discord.Status):
@@ -89,16 +81,13 @@ class Owner(Cog):
             await self.bot.change_presence(status=status)
             await ctx.send(f"Bot status changed to {status}")
             await ctx.message.delete()
-            logger.info(f"Bot status changed to {status}")
+            logger.info("Bot status changed to %s", status)
 
-    @commands.command(name="guild_info", hidden=True)
-    @commands.is_owner()
+    @commands.command(name="guild_info", hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore
     async def guild_info(self, ctx: Context, guild_id: Optional[int] = None) -> None:
         """Get information about a guild"""
-        if guild_id is None:
-            guild_id: discord.Guild.id = ctx.guild.id
-
-        guild = self.bot.get_guild(guild_id)
+        guild = self.bot.get_guild(guild_id if guild_id else ctx.guild.id)
         if guild is not None:
             embed = discord.Embed(
                title=f"Information for {guild.name}",
@@ -122,8 +111,8 @@ class Owner(Cog):
             await ctx.send("Guild not found, please try again later.\n"
                            "If error persists, please DM SpiritTheWalf.")
 
-    @commands.command(name="status", hidden=True)
-    @commands.is_owner()
+    @commands.command(name="status", hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore # type: ignore
     async def status(self, ctx: Context, *, new_status: Optional[str] = None) -> None:
         """Change the bot's status"""
         if new_status is None:
@@ -133,8 +122,8 @@ class Owner(Cog):
         await ctx.message.delete()
         logger.info("%s changed bot status", ctx.author)
 
-    @commands.command(name='restart', hidden=True)
-    @commands.is_owner()
+    @commands.command(name='restart', hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore
     async def restart(self, ctx: Context) -> None:
         """Restart the bot"""
         await ctx.send('Restarting...')
@@ -142,8 +131,8 @@ class Owner(Cog):
         await self.bot.close()
         os.execv(sys.executable, ['python'] + sys.argv)
 
-    @commands.command(name="killswitch", hidden=True)
-    @commands.is_owner()
+    @commands.command(name="killswitch", hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore
     async def killswitch(self, ctx: Context, password: Optional[str] = None) -> None:
         """Stop the bot"""
         correct_password = "ThisIsAVerySecurePassword"
@@ -159,9 +148,9 @@ class Owner(Cog):
             await ctx.send("Wrong Password!")
             await ctx.message.delete()
 
-    @commands.command(name="reload", hidden=True)
-    @commands.is_owner()
-    async def reload(self, ctx: Context, cog) -> None:
+    @commands.command(name="reload", hidden=True) # type: ignore
+    @commands.is_owner() # type: ignore
+    async def reload(self, ctx: Context, cog: str) -> None:
         """Reload a cog"""
         message = await ctx.send(f"Reloading {cog}")
         try:
@@ -173,10 +162,10 @@ class Owner(Cog):
                 await ctx.send(f"Cog {cog} not found")
         except ExtensionFailed as e:
             print(f"An error occurred while reloading extension: {e}")
-            print(traceback.print_exc())
+            print(traceback.print_exception(type(e), e, e.__traceback__))
             await message.edit(content=f"Failed to reload {cog}:\n{e}")
         await ctx.message.delete()
 
-async def setup(bot) -> None:
+async def setup(bot: commands.Bot) -> None:
     """Setup function for Owner"""
     await bot.add_cog(Owner(bot))
