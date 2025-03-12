@@ -1,20 +1,11 @@
-# TO IMPLEMENT
+# TO SUGGEST A NEW FUNCTION/IDEA
 
-* Sheri API Functionality - SFW only
-* Dukey Stickers (Tele?) - SFW only
-* Levels from FangstersBot
-* Reaction Logging
-* Regular logging from RansasV2
-* Custom Commands
-* e621 commands? - Maybe (SFW only if implemented, per server lock?)
-* Setup commands
-* Info commands
-* Moderation commands
-* Contributors - Custom command or under info command?
-* Spotify track sending? artist and album - Look into this, under `discord.Spotify`
-* YTDLP or LavaLink/Wavelink for music? Make it robust with ipv6 rotation etc, the works
-* Some level of customisation per server
-* AntiRaid from Wick (Look into features and custom make per-server options)
-* Website to config rather than through commands?
-* Reaction Roles
-* Starboard
+1. Fork the project (Make sure to keep it up-to-date)
+2. Make your changes in to_implement
+3. Commit your changes to your fork
+4. Make a pull request to my repo
+5. Wait for it to be accepted
+6. Done!
+
+
+Feel free to edit my code and pull request if I did something wrong, it is still being developed so problems will happen
