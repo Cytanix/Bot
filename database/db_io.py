@@ -130,7 +130,7 @@ class Punishments:
         """Gets a punishment from the database"""
         async with session_factory() as session:
             try:
-                entry = (await session.execute(select(DbPunishments).filter(
+                entry: Union[DbPunishments, None] = (await session.execute(select(DbPunishments).filter(
                     DbPunishments.punishment_id == punishment_id,
                     DbPunishments.guild_id == guild_id,
                     DbPunishments.user_id == user_id))).scalars().first()
