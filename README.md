@@ -17,3 +17,4 @@
 * AntiRaid from Wick (Look into features and custom make per-server options)
 * Website to config rather than through commands?
 * Reaction Roles
+* Starboard
