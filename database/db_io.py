@@ -5,7 +5,8 @@
 """Contains the functions to interact with the database"""
 from typing import Union
 import sqlalchemy
-from .makedb import session_factory, Logs as DbLog
+from sqlalchemy import select
+from .makedb import session_factory, Logs as DbLog, Punishments as DbPunishments
 
 class Logs:
     """Defines the log structure"""
@@ -14,7 +15,7 @@ class Logs:
     async def check_guild(guild_id: int) -> bool:
         """Checks if the guild is already in the database"""
         async with session_factory() as session:
-            result = await session.query(DbLog).filter(DbLog.guild_id == guild_id).first()
+            result = (await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))).scalars().first()
             if result:
                 return True
             return False
@@ -30,7 +31,7 @@ class Logs:
             muterole_logging_channel_id: str,) -> str:
         """Add a guild to the log table"""
         async with session_factory() as session:
-            guild_entry = await session.query(DbLog).filter(DbLog.guild_id == guild_id).first()
+            guild_entry = (await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))).scalars().first()
             if guild_entry:
                 try:
                     setattr(guild_entry, "message_logging_channel_id", message_logging_channel_id)
@@ -53,12 +54,13 @@ class Logs:
         """Gets a guild from the database"""
         async with session_factory() as session:
             try:
-                entry: Union[DbLog, None] = await session.query(DbLog).filter(DbLog.guild_id == guild_id).first()
+                entry: Union[DbLog, None] = (await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))).scalars().first()
                 if entry:
                     return entry
                 return None
 
             except sqlalchemy.exc.SQLAlchemyError as e:
+                await session.rollback()
                 print(e)
                 return "Something went wrong, please check error logs."
 
@@ -67,11 +69,93 @@ class Logs:
         """Removes a guild from the database"""
         async with session_factory() as session:
             try:
-                entry = await session.query(DbLog).filter(DbLog.guild_id == guild_id).first()
+                entry = (await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))).scalars().first()
                 await session.delete(entry)
                 await session.commit()
                 return f"Guild with id {guild_id} was removed."
 
             except sqlalchemy.exc.SQLAlchemyError as e:
+                await session.rollback()
+                print(e)
+                return "Something went wrong, please check error logs."
+
+    @staticmethod
+    async def add_guild_on_join(guild_id: int) -> str:
+        """Adds a guild to the log table"""
+        try:
+            async with session_factory() as session:
+                guild_entry = DbLog()
+                setattr(guild_entry, "guild_id", guild_id)
+                await session.add(guild_entry)
+                await session.commit()
+                return f"Guild with id {guild_id} added to the database successfully."
+
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            await session.rollback()
+            print(e)
+            return "Something went wrong, please check error logs."
+
+class Punishments:
+    """Defines the punishment structure"""
+
+    @staticmethod
+    async def add_punishment( # pylint: disable=R0913,R0917
+            guild_id: int,
+            user_id: int,
+            punishment: str,
+            punishment_time: int,
+            moderator_id: int,
+            reason: str,) -> str:
+        """Adds a punishment to the database"""
+        try:
+            async with session_factory() as session:
+                punishment_entry = DbPunishments()
+                setattr(punishment_entry, "guild_id", guild_id)
+                setattr(punishment_entry, "user_id", user_id)
+                setattr(punishment_entry, "punishment", punishment)
+                setattr(punishment_entry, "punishment_time", punishment_time)
+                setattr(punishment_entry, "moderator_id", moderator_id)
+                setattr(punishment_entry, "reason", reason)
+                await session.add(punishment_entry)
+                await session.commit()
+                return "The punishment was added to the database successfully."
+
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            await session.rollback()
+            print(e)
+            return "Something went wrong, please check error logs."
+
+    @staticmethod
+    async def get_punishment(punishment_id: int, guild_id: int, user_id: int) -> Union[DbPunishments, None, str]:
+        """Gets a punishment from the database"""
+        async with session_factory() as session:
+            try:
+                entry = (await session.execute(select(DbPunishments).filter(
+                    DbPunishments.punishment_id == punishment_id,
+                    DbPunishments.guild_id == guild_id,
+                    DbPunishments.user_id == user_id))).scalars().first()
+                if entry:
+                    return entry
+                return None
+            except sqlalchemy.exc.SQLAlchemyError as e:
+                await session.rollback()
+                print(e)
+                return "Something went wrong, please check error logs."
+
+    @staticmethod
+    async def delete_punishment(punishment_id: int) -> str:
+        """Deletes a punishment from the database"""
+        async with session_factory() as session:
+            try:
+                entry = (await session.execute(select(DbPunishments).filter(DbPunishments.punishment_id == punishment_id))).scalars().first()
+                if entry:
+                    await session.delete(entry)
+                    await session.commit()
+                    return "The punishment was deleted successfully."
+
+                return "There was an error deleting the punishment."
+
+            except sqlalchemy.exc.SQLAlchemyError as e:
+                await session.rollback()
                 print(e)
                 return "Something went wrong, please check error logs."
