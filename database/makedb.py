@@ -33,6 +33,7 @@ class Logs(Base): # type: ignore
     mod_logs = Column(BigInteger)
     muterole = Column(BigInteger)
     muterole_channel = Column(BigInteger)
+    reaction_logging = Column(BigInteger)
 
 class Punishments(Base): # type: ignore
     """Model for the punishments table"""

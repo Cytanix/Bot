@@ -28,7 +28,8 @@ class Logs:
             voice_logging_channel_id: str,
             moderation_logging_channel_id: str,
             muterole_role_id: str,
-            muterole_logging_channel_id: str,) -> str:
+            muterole_logging_channel_id: str,
+            reaction_logging: str,) -> str:
         """Add a guild to the log table"""
         async with session_factory() as session:
             guild_entry = (await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))).scalars().first()
@@ -40,6 +41,7 @@ class Logs:
                     setattr(guild_entry, "moderation_logging_channel_id", moderation_logging_channel_id)
                     setattr(guild_entry, "muterole_logging_channel_id", muterole_logging_channel_id)
                     setattr(guild_entry, "muterole_role_id", muterole_role_id)
+                    setattr(guild_entry, "reaction_logging", reaction_logging)
                     await session.commit()
                     return "The operation completed successfully."
                 except sqlalchemy.exc.SQLAlchemyError as e:
