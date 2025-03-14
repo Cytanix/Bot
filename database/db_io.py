@@ -6,7 +6,7 @@
 from typing import Union, Any
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger import logger
 from .makedb import session_factory, Logs as DbLog, Punishments as DbPunishments
 
@@ -14,9 +14,10 @@ class Logs:
     """Defines the log structure"""
 
     @staticmethod
-    async def _get_guild_entry(guild_id: int, session: Session) -> Union[DbLog, None]:
+    async def _get_guild_entry(guild_id: int, session: AsyncSession) -> Union[DbLog, None]:
         """Helper method to get a guild entry"""
-        return (await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))).scalars().first()
+        result = await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))
+        return result.scalars().first()
 
 
     @staticmethod
@@ -102,7 +103,8 @@ class Punishments:
     @staticmethod
     async def _get_punishment_entry(punishment_id: int, session: Session) -> Union[DbPunishments, None]:
         """Helper method to get a punishment entry"""
-        return (await session.execute(DbPunishments).filter(DbPunishments.punishment_id == punishment_id)).scalars().first()
+        result = await session.execute(DbPunishments).filter(DbPunishments.punishment_id == punishment_id)
+        return result.scalars().first()
 
 
     @staticmethod
