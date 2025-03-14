@@ -3,7 +3,7 @@
 # This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
 # To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/ or see the LICENSE file.
 """Contains the functions to interact with the database"""
-from typing import Union, Any
+from typing import Union, Any, cast
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,7 @@ class Logs:
     async def _get_guild_entry(guild_id: int, session: AsyncSession) -> Union[DbLog, None]:
         """Helper method to get a guild entry"""
         result = await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))
-        return result.scalars().first()
+        return cast(Union[DbLog, None], result.scalars().first())
 
 
     @staticmethod
@@ -101,10 +101,10 @@ class Punishments:
     """Defines the punishment structure"""
 
     @staticmethod
-    async def _get_punishment_entry(punishment_id: int, session: Session) -> Union[DbPunishments, None]:
+    async def _get_punishment_entry(punishment_id: int, session: AsyncSession) -> Union[DbPunishments, None]:
         """Helper method to get a punishment entry"""
         result = await session.execute(DbPunishments).filter(DbPunishments.punishment_id == punishment_id)
-        return result.scalars().first()
+        return cast(Union[DbPunishments, None], result.scalars().first())
 
 
     @staticmethod
