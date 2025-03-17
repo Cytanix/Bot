@@ -29,7 +29,6 @@ intents.members = True
 if TYPE_CHECKING:
     from typing import Any
 
-
 async def cog_loader(bot_instance: commands.Bot) -> None:
     """This function loads all cogs in the cogs folder plus jishaku."""
     await bot_instance.load_extension('jishaku')
