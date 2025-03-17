@@ -51,7 +51,7 @@ class Logs:
                 return f"Guild with id {guild_id} was removed."
 
             except SQLAlchemyError as e:
-                if session.in_transaction():
+                if session.is_active:
                     await session.rollback()
                 logger.error("Database error while removing guild entry: %s\nRolling back...", e, exc_info=True)
                 return "Something went wrong, please check error logs."
@@ -68,7 +68,7 @@ class Logs:
                 return f"Guild with id {guild_id} added to the database successfully."
 
             except SQLAlchemyError as e:
-                if session.in_transaction():
+                if session.is_active:
                     await session.rollback()
                 logger.error("Database error while adding guild entry on guild join: %s\nRolling back...", e, exc_info=True)
                 return "Something went wrong, please check error logs."
@@ -89,7 +89,7 @@ class Logs:
                     await session.commit()
                     return "The operation completed successfully."
                 except SQLAlchemyError as e:
-                    if session.in_transaction():
+                    if session.is_active:
                         await session.rollback()
                     logger.error("Database error while updating guild entry: %s\nRolling back...", e, exc_info=True)
                     return "Something went wrong, please check error logs."
@@ -122,7 +122,8 @@ class Punishments:
                 return "The punishment was added to the database successfully."
 
             except SQLAlchemyError as e:
-                await session.rollback()
+                if session.is_active:
+                    await session.rollback()
                 logger.error("Database error while adding punishment entry: %s", e, exc_info=True)
                 return "Something went wrong, please check error logs."
 
@@ -160,7 +161,8 @@ class Punishments:
                 return "There was an error deleting the punishment."
 
             except SQLAlchemyError as e:
-                await session.rollback()
+                if session.is_active:
+                    await session.rollback()
                 logger.error("Database error while deleting punishment: %s\nRolling back...", e, exc_info=True)
                 return "Something went wrong, please check error logs."
 
@@ -179,20 +181,20 @@ class CustomCommands: # pylint: disable=R0903
         """Adds a custom command to the database"""
         async with session_factory() as session:
             try:
-                custom_command_entry = DbCc()
                 valid_fields = {c.name for c in DbCc.__table__.columns}
                 updates = {k: v for k, v in kwargs.items() if k in valid_fields and v is not None}
-                for key, value in updates.items():
-                    setattr(custom_command_entry, key, value)
+
+                custom_command_entry = DbCc(**updates)
                 await session.add(custom_command_entry)
                 await session.commit()
+
                 return "The custom command was added to the database successfully."
 
             except SQLAlchemyError as e:
-                if session.in_transaction():
+                if session.is_active:
                     await session.rollback()
-                    logger.error("Database error while adding custom command: %s\nRolling back....", e, exc_info=e)
-                    return "Something went wrong, please check error logs."
+                logger.error("Database error while adding custom command: %s\nRolling back....", e, exc_info=True)
+                return "Something went wrong, please check error logs."
 
 #    @staticmethod
 #    async def get_custom_command(name: str) -> Union[DbCc, None]:
