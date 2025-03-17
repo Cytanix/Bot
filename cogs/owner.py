@@ -12,6 +12,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, ExtensionFailed, Context
 from utils.logger import logger
+from utils.error_reporting import send_error
 
 class Owner(Cog): # type: ignore
     """Owner commands"""
@@ -165,6 +166,13 @@ class Owner(Cog): # type: ignore
             print(traceback.print_exception(type(e), e, e.__traceback__))
             await message.edit(content=f"Failed to reload {cog}:\n{e}")
         await ctx.message.delete()
+
+    @commands.command(name="test_mb", hidden=True)
+    async def test_mb(self, ctx: Context) -> None:
+        error_name = "Test error"
+        error_message = "This is a simulated error for testing purposes."
+        result = await send_error(name=error_name, error=error_message)
+        print(result)
 
 async def setup(bot: commands.Bot) -> None:
     """Setup function for Owner"""
