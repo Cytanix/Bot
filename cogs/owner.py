@@ -167,11 +167,13 @@ class Owner(Cog): # type: ignore
             await message.edit(content=f"Failed to reload {cog}:\n{e}")
         await ctx.message.delete()
 
-    @commands.command(name="test_mb", hidden=True)
-    async def test_mb(self, ctx: Context) -> None:
+    @commands.command(name="test_mb", hidden=True) # type: ignore
+    async def test_mb(self, ctx: commands.Context) -> None:
+        """Just a simple function to check if my error sending is working as intended"""
         error_name = "Test error"
         error_message = "This is a simulated error for testing purposes."
         result = await send_error(name=error_name, error=error_message)
+        await ctx.message.add_reaction("✅")
         print(result)
 
 async def setup(bot: commands.Bot) -> None:

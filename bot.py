@@ -86,7 +86,7 @@ class Cytanix(commands.Bot): # type: ignore
         with open("utils/command_count.json", "w", encoding="utf-8") as f:
             json.dump({"count": self.command_count}, f)
 
-    async def on_command_completion(self, context) -> None:
+    async def on_command_completion(self, context: commands.Context) -> None: # pylint: disable=W0613
         """Triggered when a command is used."""
         self.command_count += 1
         self.save_command_count()

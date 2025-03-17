@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger import logger
-from .makedb import session_factory, Logs as DbLog, Punishments as DbPunishments
+from .makedb import session_factory, Logs as DbLog, Punishments as DbPunishments, CustomCommands as DbCc
 
 class Logs:
     """Defines the log structure"""
@@ -163,3 +163,38 @@ class Punishments:
                 await session.rollback()
                 logger.error("Database error while deleting punishment: %s\nRolling back...", e, exc_info=True)
                 return "Something went wrong, please check error logs."
+
+
+class CustomCommands: # pylint: disable=R0903
+    """Defines the custom commands structure"""
+
+    @staticmethod
+    async def _get_command_entry(name: str, session: AsyncSession) -> Union[DbCc, None]:
+        """Helper method to get a command entry"""
+        result = await session.execute(DbCc).filter(DbCc.name == name)
+        return cast(Union[DbCc, None], result.scalars().first())
+
+    @staticmethod
+    async def add_custom_command(**kwargs: Any  ) -> str:
+        """Adds a custom command to the database"""
+        async with session_factory() as session:
+            try:
+                custom_command_entry = DbCc()
+                valid_fields = {c.name for c in DbCc.__table__.columns}
+                updates = {k: v for k, v in kwargs.items() if k in valid_fields and v is not None}
+                for key, value in updates.items():
+                    setattr(custom_command_entry, key, value)
+                await session.add(custom_command_entry)
+                await session.commit()
+                return "The custom command was added to the database successfully."
+
+            except SQLAlchemyError as e:
+                if session.in_transaction():
+                    await session.rollback()
+                    logger.error("Database error while adding custom command: %s\nRolling back....", e, exc_info=e)
+                    return "Something went wrong, please check error logs."
+
+#    @staticmethod
+#    async def get_custom_command(name: str) -> Union[DbCc, None]:
+#        """Gets a custom command from the database"""
+#        pass
