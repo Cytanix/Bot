@@ -5,12 +5,12 @@
 """This file contains a combined test function for testing the connection and session query to the database."""
 import asyncio
 import os
-from sqlalchemy.ext.asyncio import create_async_engine
+import logging
 from sqlalchemy.future import select
 from sqlalchemy import URL
 from dotenv import load_dotenv
 from database.makedb import session_factory, Logs, engine
-import logging
+
 
 load_dotenv()
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -38,19 +38,20 @@ async def test_database() -> None:
         async with session_factory() as session:
             result = await session.execute(select(Logs))
             logger.info("Session executed successfully.")
-            logger.info(f"Query result: {result.all()}")
-    except Exception as e:
-        logger.error(f"Error during database tests: {e}")
+            logger.info("Query result: %s", result.all())
+    except Exception as e: # pylint: disable=W0718
+        logger.error("Error during database tests: %s", e)
     finally:
         await engine.dispose()
 
 
-async def main():
+async def main() -> None:
+    """Calls the test function"""
     await test_database()
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except Exception as e:
-        logger.error(f"Error running the main async event loop: {e}")
+    except Exception as e: # pylint: disable=W0718
+        logger.error("Error running the main async event loop: %s", e)
