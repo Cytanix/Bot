@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 from sqlalchemy import Column, BigInteger, String, Boolean, Index, Integer, ForeignKeyConstraint, URL
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from utils.logger import logger
 
 load_dotenv()
 Base = declarative_base()
