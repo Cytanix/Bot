@@ -20,7 +20,9 @@ class Logs:
     async def _get_guild_entry(guild_id: int, session: AsyncSession) -> Union[DbLog, None]:
         """Helper method to get a guild entry"""
         result = await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))
-        return result.scalars().first()
+        if result:
+            return cast(DbLog, result.scalars().first())
+        return None
 
     @staticmethod
     async def check_guild(guild_id: int) -> bool:

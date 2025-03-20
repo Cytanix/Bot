@@ -5,8 +5,7 @@ import traceback
 import asyncio
 from sqlalchemy.exc import SQLAlchemyError
 from database.db_io import Logs as LogsFunc
-from database.makedb import session_factory
-
+from database.makedb import session_factory, Logs
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,15 +21,19 @@ async def test_logs_operations() -> None:
         guild = await LogsFunc.get_guild(guild_id)
         if isinstance(guild, str):
             logger.error("Error fetching guild: %s", guild)
+        elif guild is None:
+            logger.error("Guild is None, failed to fetch.")
         else:
-            logger.info("Guild fetched successfully: %s",  guild.guild_id)
+            logger.info("Guild fetched successfully: %s", guild.guild_id)
 
         update_result = await LogsFunc.update_guild(guild_id, message_logs=100)
         logger.info(update_result)
 
         updated_guild = await LogsFunc.get_guild(guild_id)
-        if updated_guild:
+        if isinstance(updated_guild, Logs):
             logger.info("Updated guild entry: %s", updated_guild.message_logs)
+        elif updated_guild is None:
+            logger.error("Guild is None, failed to update.")
         else:
             logger.error("Guild not found after update.")
 

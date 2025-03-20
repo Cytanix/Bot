@@ -1,11 +1,13 @@
 # This is ChatGPT Generated code, purely for testing purposes
+"""This file tests the Punishment table functions"""
 import asyncio
 import traceback
 from database.db_io import Punishments
 
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-async def test_punishments():
+async def test_punishments() -> None:
+    """Function to test the Punishment table functions"""
     try:
         guild_id = 123456789
         user_id = 987654321
@@ -27,7 +29,7 @@ async def test_punishments():
         print(f"Punishments for user {user_id}:", user_punishments)
 
         # Get the last inserted punishment ID
-        if user_punishments:
+        if isinstance(user_punishments, Punishments):
             last_punishment_id = user_punishments[-1].punishment_id
         else:
             print("No punishments found for user.")
@@ -35,13 +37,13 @@ async def test_punishments():
 
         # Get punishment with ID 1
         punishment_entry = await Punishments.get_punishment(1, guild_id)
-        print(f"Punishment with ID 1:", punishment_entry)
+        print("Punishment with ID 1:", punishment_entry)
 
         # Get the last added punishment
         last_punishment_entry = await Punishments.get_punishment(last_punishment_id, guild_id)
         print(f"Last added punishment (ID {last_punishment_id}):", last_punishment_entry)
 
-    except Exception as e:
+    except Exception as e: # pylint: disable=W0718
         tb_str = traceback.format_exc()
         print(f"Test encountered an error: {str(e)}\n{tb_str}")
 
