@@ -1,16 +1,18 @@
 # This is ChatGPT Generated code, purely for testing purposes
+"""This file contains the functions to test the Logs table"""
 import logging
-from database.db_io import Logs as LogsFunc
-from sqlalchemy.exc import SQLAlchemyError
 import traceback
 import asyncio
+from sqlalchemy.exc import SQLAlchemyError
+from database.db_io import Logs as LogsFunc
 from database.makedb import session_factory
 
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def test_logs_operations():
+async def test_logs_operations() -> None:
+    """Function to test the logs operations"""
     guild_id = 514170870202368000  # Real guild ID for testing
 
     try:
@@ -19,16 +21,16 @@ async def test_logs_operations():
 
         guild = await LogsFunc.get_guild(guild_id)
         if isinstance(guild, str):
-            logger.error(f"Error fetching guild: {guild}")
+            logger.error("Error fetching guild: %s", guild)
         else:
-            logger.info(f"Guild fetched successfully: {guild.guild_id}")
+            logger.info("Guild fetched successfully: %s",  guild.guild_id)
 
         update_result = await LogsFunc.update_guild(guild_id, message_logs=100)
         logger.info(update_result)
 
         updated_guild = await LogsFunc.get_guild(guild_id)
         if updated_guild:
-            logger.info(f"Updated guild entry: {updated_guild.message_logs}")
+            logger.info("Updated guild entry: %s", updated_guild.message_logs)
         else:
             logger.error("Guild not found after update.")
 
@@ -37,19 +39,20 @@ async def test_logs_operations():
 
         deleted_guild = await LogsFunc.get_guild(guild_id)
         if deleted_guild is None:
-            logger.info(f"Guild {guild_id} successfully removed from the database.")
+            logger.info("Guild %s successfully removed from the database.", guild_id)
         else:
-            logger.error(f"Guild {guild_id} still exists in the database.")
+            logger.error("Guild %s still exists in the database.", guild_id)
 
     except SQLAlchemyError as e:
         tb_str = traceback.format_exc()
-        logger.error(f"Database error during operation: {e}\n{tb_str}")
-    except Exception as e:
-        logger.error(f"Unexpected error occurred: {str(e)}")
-        logger.error(f"Exception type: {type(e)}")
-        logger.error(f"Traceback details:\n{traceback.format_exc()}")
+        logger.error("Database error during operation: %s",  f'{e}\n{tb_str}')
+    except Exception as e:  # pylint: disable=W0718
+        logger.error("Unexpected error occurred: %s", str(e))
+        logger.error("Exception type: %s", type(e))
+        logger.error("Traceback details: %s", traceback.format_exc())
 
-async def test_session():
+async def test_session() -> None:
+    """Function to test the session"""
     async with session_factory() as session:
         print(f"Session created: {session}")
 
