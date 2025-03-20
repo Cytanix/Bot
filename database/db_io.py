@@ -3,12 +3,15 @@
 # This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
 # To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/ or see the LICENSE file.
 """Contains the functions to interact with the database"""
+import traceback
 from typing import Union, Any, cast
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger import logger
 from .makedb import session_factory, Logs as DbLog, Punishments as DbPunishments, CustomCommands as DbCc
+from utils.error_reporting import send_error
+
 
 class Logs:
     """Defines the log structure"""
@@ -17,15 +20,13 @@ class Logs:
     async def _get_guild_entry(guild_id: int, session: AsyncSession) -> Union[DbLog, None]:
         """Helper method to get a guild entry"""
         result = await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))
-        return cast(Union[DbLog, None], result.scalars().first())
-
+        return result.scalars().first()
 
     @staticmethod
     async def check_guild(guild_id: int) -> bool:
         """Checks if the guild is already in the database"""
         async with session_factory() as session:
             return await Logs._get_guild_entry(guild_id, session) is not None
-
 
     @staticmethod
     async def get_guild(guild_id: int) -> Union[DbLog, None, str]:
@@ -34,12 +35,13 @@ class Logs:
             try:
                 return await Logs._get_guild_entry(guild_id, session)
             except SQLAlchemyError as e:
+                tb_str = traceback.format_exc()
+                await send_error("get_guild", f"{str(e)}\n{tb_str}")
                 logger.error("Database error while getting guild entry: %s", e, exc_info=True)
                 return "Something went wrong, please check error logs."
 
-
     @staticmethod
-    async def remove_guild(guild_id: int)-> str:
+    async def remove_guild(guild_id: int) -> str:
         """Removes a guild from the database"""
         async with session_factory() as session:
             try:
@@ -49,28 +51,40 @@ class Logs:
                 await session.delete(entry)
                 await session.commit()
                 return f"Guild with id {guild_id} was removed."
-
             except SQLAlchemyError as e:
+                tb_str = traceback.format_exc()
+                await send_error("remove_guild", f"{str(e)}\n{tb_str}")
                 if session.is_active:
                     await session.rollback()
                 logger.error("Database error while removing guild entry: %s\nRolling back...", e, exc_info=True)
                 return "Something went wrong, please check error logs."
-
 
     @staticmethod
     async def add_guild_on_join(guild_id: int) -> str:
         """Adds a guild to the log table"""
         async with session_factory() as session:
             try:
+                logger.debug(f"Session: {session}")  # Log session to confirm it's not None
+                if session is None:
+                    return "Session factory returned None"
+
                 guild_entry = DbLog(guild_id=guild_id)
+                logger.debug(f"Guild Entry: {guild_entry}")  # Log the entry before adding
+
+                if guild_entry is None:
+                    return "Failed to create guild entry"
+
+                # Add to session and commit
                 await session.add(guild_entry)
                 await session.commit()
                 return f"Guild with id {guild_id} added to the database successfully."
-
-            except SQLAlchemyError as e:
+            except Exception as e:
+                tb_str = traceback.format_exc()
+                await send_error("add_guild_on_join", f"{str(e)}\n{tb_str}")
                 if session.is_active:
                     await session.rollback()
-                logger.error("Database error while adding guild entry on guild join: %s\nRolling back...", e, exc_info=True)
+                logger.error("Database error while adding guild entry on guild join: %s\nRolling back...", e,
+                             exc_info=True)
                 return "Something went wrong, please check error logs."
 
 
@@ -89,6 +103,8 @@ class Logs:
                     await session.commit()
                     return "The operation completed successfully."
                 except SQLAlchemyError as e:
+                    tb_str = traceback.format_exc()
+                    await send_error("update_guild", f"{str(e)}\n{tb_str}")
                     if session.is_active:
                         await session.rollback()
                     logger.error("Database error while updating guild entry: %s\nRolling back...", e, exc_info=True)
@@ -122,6 +138,8 @@ class Punishments:
                 return "The punishment was added to the database successfully."
 
             except SQLAlchemyError as e:
+                tb_str = traceback.format_exc()
+                await send_error("add_punishment", f"{str(e)}\n{tb_str}")
                 if session.is_active:
                     await session.rollback()
                 logger.error("Database error while adding punishment entry: %s", e, exc_info=True)
@@ -141,6 +159,8 @@ class Punishments:
                             "-# Please note, punishments can only be viewed in the guild they came from.")
                 return "Punishment not found."
             except SQLAlchemyError as e:
+                tb_str = traceback.format_exc()
+                await send_error("get_punishment", f"{str(e)}\n{tb_str}")
                 logger.error("Database error while getting punishment entry: %s", e, exc_info=True)
                 return "Something went wrong, please check error logs."
 
@@ -161,6 +181,8 @@ class Punishments:
                 return "There was an error deleting the punishment."
 
             except SQLAlchemyError as e:
+                tb_str = traceback.format_exc()
+                await send_error("delete_punishment", f"{str(e)}\n{tb_str}")
                 if session.is_active:
                     await session.rollback()
                 logger.error("Database error while deleting punishment: %s\nRolling back...", e, exc_info=True)
@@ -191,12 +213,55 @@ class CustomCommands: # pylint: disable=R0903
                 return "The custom command was added to the database successfully."
 
             except SQLAlchemyError as e:
+                tb_str = traceback.format_exc()
+                await send_error("add_custom_command", f"{str(e)}\n{tb_str}")
                 if session.is_active:
                     await session.rollback()
                 logger.error("Database error while adding custom command: %s\nRolling back....", e, exc_info=True)
                 return "Something went wrong, please check error logs."
 
-#    @staticmethod
-#    async def get_custom_command(name: str) -> Union[DbCc, None]:
-#        """Gets a custom command from the database"""
-#        pass
+    @staticmethod
+    async def get_custom_command(name: str) -> Union[DbCc, None]:
+        """Gets a custom command from the database"""
+        async with session_factory() as session:
+            entry = await CustomCommands._get_command_entry(name, session)
+            return entry or None
+
+    @staticmethod
+    async def edit_custom_command(name: str, **kwargs: Any) -> str:
+        """Edits a custom command from the database"""
+        async with session_factory() as session:
+            custom_command_entry = await CustomCommands._get_command_entry(name, session)
+            if custom_command_entry:
+                try:
+                    valid_fields = {c.name for c in DbCc.__table__.columns}
+                    updates = {k: v for k, v in kwargs.items() if k in valid_fields and v is not None}
+                    for key, value in updates.items():
+                        setattr(custom_command_entry, key, value)
+
+                    await session.add(custom_command_entry)
+                    await session.commit()
+                    return "The custom command was updated successfully."
+
+                except SQLAlchemyError as e:
+                    tb_str = traceback.format_exc()
+                    await send_error("edit_custom_command", f"{str(e)}\n{tb_str}")
+
+    @staticmethod
+    async def delete_custom_command(name: str) -> str:
+        """Deletes a custom command from the database"""
+        async with session_factory() as session:
+            try:
+                command_entry = await CustomCommands._get_command_entry(name, session)
+                if command_entry:
+                    await session.delete(command_entry)
+                    await session.commit()
+                    return "The custom command was deleted successfully."
+            except SQLAlchemyError as e:
+                tb_str = traceback.format_exc()
+                await send_error("delete_custom_command", f"{str(e)}\n{tb_str}")
+                if session.is_active:
+                    await session.rollback()
+                    logger.error("Database error while deleting custom command: %s\nRolling back....", e, exc_info=True)
+                    return "Something went wrong, please check error logs."
+

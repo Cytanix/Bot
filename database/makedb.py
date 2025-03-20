@@ -8,19 +8,28 @@ import os
 import asyncio
 from datetime import datetime as dt, timezone as tz
 from dotenv import load_dotenv
-from sqlalchemy import Column, BigInteger, String, Boolean, Index, Integer, ForeignKeyConstraint
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import Column, BigInteger, String, Boolean, Index, Integer, ForeignKeyConstraint, URL
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+from utils.logger import logger
 
 load_dotenv()
 Base = declarative_base()
+connection_url = URL.create(
+    "postgresql+asyncpg",
+    username=os.getenv("DATABASE_USERNAME"),
+    password=os.getenv("DATABASE_PASSWORD"),
+    host=os.getenv("DATABASE_HOST"),
+    port=os.getenv("DATABASE_PORT"),
+    database=os.getenv("DATABASE"),
+)
 engine: AsyncEngine = create_async_engine(
-    os.getenv("DATABASE_URL"),
+    connection_url,
     pool_size=10,
     max_overflow=20,
     pool_timeout=30,
-    echo=True)
-session_factory = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+    echo=False,)
+session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 class Logs(Base): # type: ignore
     """Model for the logging table"""
