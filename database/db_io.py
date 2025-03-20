@@ -9,8 +9,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger import logger
-from .makedb import session_factory, Logs as DbLog, Punishments as DbPunishments, CustomCommands as DbCc
 from utils.error_reporting import send_error
+from database.makedb import session_factory, Logs as DbLog, Punishments as DbPunishments, CustomCommands as DbCc
 
 
 class Logs:
@@ -64,27 +64,21 @@ class Logs:
         """Adds a guild to the log table"""
         async with session_factory() as session:
             try:
-                logger.debug(f"Session: {session}")  # Log session to confirm it's not None
-                if session is None:
-                    return "Session factory returned None"
-
                 guild_entry = DbLog(guild_id=guild_id)
-                logger.debug(f"Guild Entry: {guild_entry}")  # Log the entry before adding
-
                 if guild_entry is None:
-                    return "Failed to create guild entry"
-
-                # Add to session and commit
-                await session.add(guild_entry)
+                    return "No guild entry"
+                if session is None:
+                    return "No session"
+                session.add(guild_entry)
                 await session.commit()
                 return f"Guild with id {guild_id} added to the database successfully."
-            except Exception as e:
+
+            except SQLAlchemyError as e:
                 tb_str = traceback.format_exc()
                 await send_error("add_guild_on_join", f"{str(e)}\n{tb_str}")
                 if session.is_active:
                     await session.rollback()
-                logger.error("Database error while adding guild entry on guild join: %s\nRolling back...", e,
-                             exc_info=True)
+                logger.error("Database error while adding guild entry on guild join: %s\nRolling back...", e, exc_info=True)
                 return "Something went wrong, please check error logs."
 
 
@@ -119,7 +113,7 @@ class Punishments:
     @staticmethod
     async def _get_punishment_entry(punishment_id: int, session: AsyncSession) -> Union[DbPunishments, None]:
         """Helper method to get a punishment entry"""
-        result = await session.execute(DbPunishments).filter(DbPunishments.punishment_id == punishment_id)
+        result = await session.execute(select(DbPunishments).filter(DbPunishments.punishment_id == punishment_id))
         return cast(Union[DbPunishments, None], result.scalars().first())
 
 
@@ -133,7 +127,7 @@ class Punishments:
                 updates = {k: v for k, v in kwargs.items() if k in valid_fields and v is not None}
                 for key, value in updates.items():
                     setattr(punishment_entry, key, value)
-                await session.add(punishment_entry)
+                session.add(punishment_entry)
                 await session.commit()
                 return "The punishment was added to the database successfully."
 
@@ -188,6 +182,20 @@ class Punishments:
                 logger.error("Database error while deleting punishment: %s\nRolling back...", e, exc_info=True)
                 return "Something went wrong, please check error logs."
 
+    @staticmethod
+    async def get_punishments_by_user(user_id: int, guild_id: int) -> Union[DbPunishments, str]:
+        """Gets punishments by user"""
+        async with session_factory() as session:
+            result = await session.execute(
+                select(DbPunishments).filter(
+                    DbPunishments.user_id == user_id,
+                    DbPunishments.guild_id == guild_id
+                )
+            )
+            if result:
+                return cast(DbPunishments, result.scalars().all())
+            return "There was an error getting punishments by user or that user has no punishments."
+
 
 class CustomCommands: # pylint: disable=R0903
     """Defines the custom commands structure"""
@@ -207,7 +215,7 @@ class CustomCommands: # pylint: disable=R0903
                 updates = {k: v for k, v in kwargs.items() if k in valid_fields and v is not None}
 
                 custom_command_entry = DbCc(**updates)
-                await session.add(custom_command_entry)
+                session.add(custom_command_entry)
                 await session.commit()
 
                 return "The custom command was added to the database successfully."
@@ -239,13 +247,15 @@ class CustomCommands: # pylint: disable=R0903
                     for key, value in updates.items():
                         setattr(custom_command_entry, key, value)
 
-                    await session.add(custom_command_entry)
+                    session.add(custom_command_entry)
                     await session.commit()
                     return "The custom command was updated successfully."
 
                 except SQLAlchemyError as e:
                     tb_str = traceback.format_exc()
                     await send_error("edit_custom_command", f"{str(e)}\n{tb_str}")
+                    return "Something went wrong, please check error logs."
+            return "No custom command was found."
 
     @staticmethod
     async def delete_custom_command(name: str) -> str:
@@ -257,11 +267,11 @@ class CustomCommands: # pylint: disable=R0903
                     await session.delete(command_entry)
                     await session.commit()
                     return "The custom command was deleted successfully."
+                return "There was an error getting custom command."
             except SQLAlchemyError as e:
                 tb_str = traceback.format_exc()
                 await send_error("delete_custom_command", f"{str(e)}\n{tb_str}")
                 if session.is_active:
                     await session.rollback()
                     logger.error("Database error while deleting custom command: %s\nRolling back....", e, exc_info=True)
-                    return "Something went wrong, please check error logs."
-
+                return "Something went wrong, please check error logs."
