@@ -73,7 +73,6 @@ class Registration(Base): # type: ignore
     """Model for the registration table"""
     __tablename__ = 'registrations'
     user_id = Column(BigInteger, primary_key=True)
-    overage = Column(Boolean)
     gender = Column(String)
     sexuality = Column(String)
     position = Column(String)
