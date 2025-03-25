@@ -22,3 +22,4 @@ ADD REDIS CACHE
 * Reaction Roles
 * Starboard
 * Tupper/PK, with compatible imports and exports
+* Web interface for management, admin panel etc
