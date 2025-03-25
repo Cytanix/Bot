@@ -84,6 +84,9 @@ class Registration(Base): # type: ignore
     registered_at = Column(BigInteger)
     age_verified = Column(Boolean, default=False)
     artist_verified = Column(Boolean, default=False)
+    nsfw_lockout = Column(Boolean, default=False)
+    artist_lockout = Column(Boolean, default=False)
+
 
 class Levels(Base): # type: ignore
     """Model for the levels table"""
