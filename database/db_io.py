@@ -4,16 +4,19 @@
 # To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/ or see the LICENSE file.
 """Contains the functions to interact with the database"""
 import traceback
-from typing import Union, Any, cast
+from typing import Union, Any, cast, Optional
+from datetime import datetime as dt
+
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger import logger
 from utils.error_reporting import send_error
-from database.makedb import session_factory, Logs as DbLog, Punishments as DbPunishments, CustomCommands as DbCc
+from utils import enums
+from database.makedb import session_factory, Logs as DbLog, Punishments as DbPunishments, CustomCommands as DbCc, Registration as DbReg
 
 
-class Logs:
+class Logs: # Checked and working, finalized
     """Defines the log structure"""
 
     @staticmethod
@@ -109,7 +112,7 @@ class Logs:
                 return "The guild does not exist."
 
 
-class Punishments:
+class Punishments: # Checked and working, finalized
     """Defines the punishment structure"""
 
     @staticmethod
@@ -203,13 +206,14 @@ class CustomCommands: # pylint: disable=R0903
     """Defines the custom commands structure"""
 
     @staticmethod
-    async def _get_command_entry(name: str, session: AsyncSession) -> Union[DbCc, None]:
+    async def _get_command_entry(name: str, session: AsyncSession) -> Optional[DbCc]:
         """Helper method to get a command entry"""
-        result = await session.execute(DbCc).filter(DbCc.name == name)
-        return cast(Union[DbCc, None], result.scalars().first())
+        result = await session.execute(select(DbCc).filter(DbCc.name == name))
+        entry = result.scalars().first()
+        return entry if isinstance(entry, DbCc) else None
 
     @staticmethod
-    async def add_custom_command(**kwargs: Any  ) -> str:
+    async def add_custom_command(**kwargs: Any) -> str:
         """Adds a custom command to the database"""
         async with session_factory() as session:
             try:
@@ -276,4 +280,105 @@ class CustomCommands: # pylint: disable=R0903
                 if session.is_active:
                     await session.rollback()
                     logger.error("Database error while deleting custom command: %s\nRolling back....", e, exc_info=True)
+                return "Something went wrong, please check error logs."
+
+class Registration:
+    """Defines the registration structure"""
+
+
+    @staticmethod
+    async def _get_reg_entry(user_id: int, session: AsyncSession) -> Optional[DbReg]:
+        """Helper method to get a command entry"""
+        result = await session.execute(select(DbReg).filter(DbReg.user_id == user_id))
+        entry = result.scalars().first()
+        return entry if isinstance(entry, DbReg) else None
+
+    @staticmethod
+    async def register_new_user( # pylint: disable=R0913,R0917
+            user_id: int,
+            gender: enums.Gender,
+            sexuality: enums.Sexuality,
+            position: enums.Position,
+            dms: enums.Dms,
+            relationship: enums.Relationship,
+            mention: bool,
+            dob: int,
+    ) -> str:
+        """Registers a new user"""
+        async with session_factory() as session:
+            try:
+                user_entry = DbReg(
+                    user_id=user_id,
+                    gender=gender,
+                    sexuality=sexuality,
+                    position=position,
+                    dms=dms,
+                    relationship=relationship,
+                    mention=mention,
+                    dob=dob,
+                    registered_at=dt.now().timestamp(),
+                    age_verified=False,
+                    artist_verified=False,
+                    nsfw_lockout=False,
+                    artist_lockout=False
+                )
+                session.add(user_entry)
+                await session.commit()
+                return "The user was registered successfully."
+
+            except SQLAlchemyError as e:
+                if session.is_active:
+                    await session.rollback()
+                logger.error("Database error while registering new user: %s\nRolling back....", e, exc_info=True)
+                tb_str = traceback.format_exc()
+                await send_error("register_new_user", f"{str(e)}\n{tb_str}")
+                return "Something went wrong, please check error logs."
+
+    @staticmethod
+    async def update_reg_entry(user_id: int, **kwargs: Any) -> str:
+        """Updates a registration entry"""
+        async with session_factory() as session:
+            user_entry = await Registration._get_reg_entry(user_id, session)
+            if user_entry:
+                try:
+                    valid_fields = {c.name for c in DbReg.__table__.columns}
+                    updates = {k: v for k, v in kwargs.items() if k in valid_fields and v is not None}
+                    for key, value in updates.items():
+                        setattr(user_entry, key, value)
+                    await session.commit()
+                    return "The registration entry was updated successfully."
+
+                except SQLAlchemyError as e:
+                    if session.is_active:
+                        await session.rollback()
+                    logger.error("Database error while updating registration entry: %s\nRolling back....", e, exc_info=True)
+                    tb_str = traceback.format_exc()
+                    await send_error("update_reg_entry", f"{str(e)}\n{tb_str}")
+                    return "Something went wrong, please check error logs."
+            return "No user found"
+
+    @staticmethod
+    async def check_user_entry(user_id: int) -> Optional[DbReg]:
+        """Checks a registration entry"""
+        async with session_factory() as session:
+            result = await Registration._get_reg_entry(user_id, session)
+        return result if result else None
+
+    @staticmethod
+    async def delete_user_entry(user_id: int) -> Optional[str]:
+        """Deletes a registration entry"""
+        async with session_factory() as session:
+            try:
+                result = await Registration._get_reg_entry(user_id, session)
+                if result:
+                    await session.delete(result)
+                    await session.commit()
+                    return "The user was deleted successfully."
+                return None
+            except SQLAlchemyError as e:
+                if session.is_active:
+                    await session.rollback()
+                logger.error("Database error while updating registration entry: %s\nRolling back....", e, exc_info=True)
+                tb_str = traceback.format_exc()
+                await send_error("update_reg_entry", f"{str(e)}\n{tb_str}")
                 return "Something went wrong, please check error logs."
