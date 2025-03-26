@@ -10,7 +10,7 @@ from datetime import datetime as dt, timezone as tz
 from dotenv import load_dotenv
 from sqlalchemy import Column, BigInteger, String, Boolean, Index, Integer, ForeignKeyConstraint, URL
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
 load_dotenv()
 Base = declarative_base()
@@ -42,6 +42,9 @@ class Logs(Base): # type: ignore
     muterole = Column(BigInteger)
     muterole_channel = Column(BigInteger)
     reaction_logging = Column(BigInteger)
+
+    reg_role = relationship("RegRoles", back_populates="log", uselist=False, cascade="all, delete")
+
 
 class Punishments(Base): # type: ignore
     """Model for the punishments table"""
@@ -85,6 +88,7 @@ class Registration(Base): # type: ignore
     artist_verified = Column(Boolean, default=False)
     nsfw_lockout = Column(Boolean, default=False)
     artist_lockout = Column(Boolean, default=False)
+    nsfw = Column(Boolean, default=False)
 
 
 class Levels(Base): # type: ignore
@@ -101,6 +105,47 @@ class Levels(Base): # type: ignore
     level = Column(Integer, default=1)
     xp = Column(BigInteger, default=0)
 
+class RegRoles(Base): # type: ignore
+    """Model for the registration roles table"""
+    __tablename__ = 'reg_roles'
+    __table_args__ = (
+        ForeignKeyConstraint(["guild_id"], ["logs.guild_id"]),
+    )
+
+    guild_id = Column(BigInteger, primary_key=True)
+    registered = Column(BigInteger)
+    mention_mention = Column(BigInteger)
+    mention_no_mention = Column(BigInteger)
+    dms_allowed = Column(BigInteger)
+    dms_not_allowed = Column(BigInteger)
+    dms_ask = Column(BigInteger)
+    gender_male = Column(BigInteger)
+    gender_female = Column(BigInteger)
+    gender_genderfluid = Column(BigInteger)
+    gender_agender = Column(BigInteger)
+    gender_non_binary = Column(BigInteger)
+    gender_transgender = Column(BigInteger)
+    gender_trans_male = Column(BigInteger)
+    gender_trans_female = Column(BigInteger)
+    relationship_taken = Column(BigInteger)
+    relationship_single = Column(BigInteger)
+    relationship_single_seeking = Column(BigInteger)
+    relationship_single_not = Column(BigInteger)
+    relationship_rather_not = Column(BigInteger)
+    sexuality_asexual = Column(BigInteger)
+    sexuality_bisexual = Column(BigInteger)
+    sexuality_gay = Column(BigInteger)
+    sexuality_lesbian = Column(BigInteger)
+    sexuality_pansexual = Column(BigInteger)
+    sexuality_aromantic = Column(BigInteger)
+    sexuality_rather_not = Column(BigInteger)
+    position_dominant = Column(BigInteger)
+    position_submissive = Column(BigInteger)
+    position_switch = Column(BigInteger)
+    position_rather_not = Column(BigInteger)
+    position_neither = Column(BigInteger)
+
+    log = relationship("Logs", back_populates="reg_role")
 
 async def create_tables() -> None:
     """Create the tables"""
