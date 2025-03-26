@@ -11,11 +11,11 @@ async def test_registration() -> None:
     print("Registering user...")
     result = await Registration.register_new_user(
         user_id=user_id,
-        gender=str(enums.Gender.MALE),
-        sexuality=str(enums.Sexuality.STRAIGHT),
-        position=str(enums.Position.SWITCH),
-        dms=str(enums.Dms.ASK),
-        relationship=str(enums.Relationship.SINGLE),
+        gender=enums.Gender.MALE.value,
+        sexuality=enums.Sexuality.STRAIGHT.value,
+        position=enums.Position.SWITCH.value,
+        dms=enums.Dms.ASK.value,
+        relationship=enums.Relationship.SINGLE.value,
         mention=False,
         dob="01/01/1999"
     )
