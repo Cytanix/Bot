@@ -1,4 +1,4 @@
-"""This file is ai generated, purely for testing purposes"""
+"""This file is AI generated, purely for testing purposes"""
 # mypy: disable-error-code=arg-type
 import asyncio
 from database.db_io import Registration
