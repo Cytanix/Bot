@@ -2,6 +2,7 @@
 import asyncio
 from typing import Any, Dict
 from database.db_io import CustomCommands
+from database.makedb import CustomCommands as DbCc
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 # Define a test command
 test_command: Dict[str, Any]= {
@@ -25,7 +26,7 @@ async def test_custom_commands() -> None:
 
     # Ensure retrieved_command is not None before accessing attributes
     assert retrieved_command is not None, "Failed to retrieve command"
-    assert isinstance(retrieved_command, CustomCommands), "Unexpected type returned"
+    assert isinstance(retrieved_command, DbCc), "Unexpected type returned"
     assert retrieved_command.text == test_command["text"], "Text does not match"
 
     # Edit custom command
