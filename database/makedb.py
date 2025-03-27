@@ -96,14 +96,16 @@ class Levels(Base): # type: ignore
     __tablename__ = 'levels'
     __table_args__ = (
         Index('ix_user_guild', 'user_id', 'guild_id'),
-        ForeignKeyConstraint(["user_id"], ["registrations.user_id"]),
+        Index('ix_guild', 'guild_id'),
+        ForeignKeyConstraint(["user_id"], ["registrations.user_id"], ondelete="CASCADE"),
         ForeignKeyConstraint(["guild_id"], ["logs.guild_id"]),
     )
 
-    user_id = Column(BigInteger, primary_key=True)
     guild_id = Column(BigInteger, primary_key=True)
-    level = Column(Integer, default=1)
-    xp = Column(BigInteger, default=0)
+    user_id = Column(BigInteger, primary_key=True)
+    level = Column(Integer, default=1, nullable=False)
+    xp = Column(BigInteger, default=0, nullable=False)
+
 
 class RegRoles(Base): # type: ignore
     """Model for the registration roles table"""
