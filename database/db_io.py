@@ -4,16 +4,21 @@
 # To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/ or see the LICENSE file.
 """Contains the functions to interact with the database"""
 import traceback
-from typing import Union, Any, cast, Optional
+from typing import Union, Any, cast, Optional, List
 from datetime import datetime as dt
-
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger import logger
 from utils.error_reporting import send_error
 from utils import enums
-from database.makedb import session_factory, Logs as DbLog, Punishments as DbPunishments, CustomCommands as DbCc, Registration as DbReg
+from database.makedb import (
+    session_factory,
+    Logs as DbLog,
+    Punishments as DbPunishments,
+    CustomCommands as DbCc,
+    Registration as DbReg,
+    Levels as DbLvl,)
 
 
 class Logs: # Checked and working, finalized
@@ -282,6 +287,7 @@ class CustomCommands: # pylint: disable=R0903
                     logger.error("Database error while deleting custom command: %s\nRolling back....", e, exc_info=True)
                 return "Something went wrong, please check error logs."
 
+
 class Registration:
     """Defines the registration structure"""
 
@@ -382,3 +388,122 @@ class Registration:
                 tb_str = traceback.format_exc()
                 await send_error("update_reg_entry", f"{str(e)}\n{tb_str}")
                 return "Something went wrong, please check error logs."
+
+
+class Levels:
+    """Defines the Levels structure"""
+
+
+    @staticmethod
+    async def add_user_in_guild(guild_id: int, user_id: int) -> str:
+        """Adds a user to a guild"""
+        async with session_factory() as session:
+            try:
+                level_entry = DbLvl(
+                    guild_id=guild_id,
+                    user_id=user_id,
+                )
+                session.add(level_entry)
+                await session.commit()
+                return f"User with id {user_id} was added to guild {guild_id}."
+            except SQLAlchemyError as e:
+                if session.is_active:
+                    session.rollback()
+                logger.error("Database error while adding new user to guild: %s\nRolling back....", e, exc_info=True)
+                tb_str = traceback.format_exc()
+                await send_error("update_reg_entry", f"{str(e)}\n{tb_str}")
+                return "Something went wrong, please check error logs."
+
+    @staticmethod
+    async def get_user_in_guild(guild_id: int, user_id: int) -> Union[DbLvl, str]:
+        """Gets a user from a guild"""
+        async with session_factory() as session:
+            user_entry = (await session.execute(select(DbLvl).filter(DbLvl.guild_id == guild_id, DbLvl.user_id == user_id))).scalars().first()
+            if user_entry:
+                return cast(DbLvl, user_entry)
+            return "No user found for that ID and guild"
+
+    @staticmethod
+    async def get_all_users_in_guild(guild_id: int) -> List[DbLvl]:
+        """Gets all users from a guild"""
+        async with session_factory() as session:
+            users = (await session.execute(select(DbLvl).filter(DbLvl.guild_id == guild_id))).scalars().all()
+            return cast(list[DbLvl], users)
+
+    @staticmethod
+    async def get_all_guilds() -> Optional[List[int]]:
+        """Gets all unique guild IDs"""
+        async with session_factory() as session:
+            result = await session.execute(select(DbLvl.guild_id).distinct())
+            guilds = list(result.scalars())
+            return guilds if guilds else None
+
+    @staticmethod
+    async def get_all_users() -> Optional[List[int]]:
+        """Gets all users"""
+        async with session_factory() as session:
+            result = await session.execute(select(DbLvl.user_id).distinct())
+            users = list(result.scalars())
+            return users if users else None
+
+    @staticmethod
+    async def add_xp(guild_id: int, user_id: int, xp: int) -> str:
+        """Adds XP to a user."""
+        async with session_factory() as session:
+            try:
+                user = (await session.execute(
+                    select(DbLvl).filter(DbLvl.guild_id == guild_id, DbLvl.user_id == user_id))).scalars().first()
+                if user:
+                    user.xp += xp
+                    await session.commit()
+                    return "XP successfully added"
+                return "No user found with that ID for that guild"
+            except SQLAlchemyError as e:
+                if session.is_active:
+                    await session.rollback()
+                logger.error("Database error while adding XP: %s\nRolling back....", e, exc_info=True)
+                tb_str = traceback.format_exc()
+                await send_error("add_xp", f"{str(e)}\n{tb_str}")
+                return "Something went wrong, please check error logs."
+
+    @staticmethod
+    async def remove_xp(guild_id: int, user_id: int, xp: int) -> str:
+        """Removes XP from a user."""
+        async with session_factory() as session:
+            try:
+                user = (await session.execute(
+                    select(DbLvl).filter(DbLvl.guild_id == guild_id, DbLvl.user_id == user_id))).scalars().first()
+                if user:
+                    user.xp -= xp
+                    await session.commit()
+                    return "XP successfully added"
+                return "No user found with that ID for that guild"
+            except SQLAlchemyError as e:
+                if session.is_active:
+                    await session.rollback()
+                logger.error("Database error while removing XP: %s\nRolling back....", e, exc_info=True)
+                tb_str = traceback.format_exc()
+                await send_error("remove_xp", f"{str(e)}\n{tb_str}")
+                return "Something went wrong, please check error logs."
+
+    @staticmethod
+    async def remove_user_from_guild(guild_id: int, user_id: int) -> str:
+        """Removes a user from a guild"""
+        async with session_factory() as session:
+            try:
+                user = (await session.execute(select(DbLvl).filter(DbLvl.guild_id == guild_id, DbLvl.user_id == user_id))).scalars().first()
+                if not isinstance(user, DbLvl):
+                    return "No user found with that ID for that guild."
+                if user:
+                    await session.delete(user)
+                    await session.commit()
+                    return "User successfully removed."
+            except SQLAlchemyError as e:
+                if session.is_active:
+                    await session.rollback()
+                logger.error("Database error while removing user: %s\nRolling back....", e, exc_info=True)
+                tb_str = traceback.format_exc()
+                await send_error("remove_user_from_guild", f"{str(e)}\n{tb_str}")
+                return "Something went wrong, please check error logs."
+
+
