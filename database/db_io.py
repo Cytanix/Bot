@@ -25,12 +25,12 @@ class Logs: # Checked and working, finalized
     """Defines the log structure"""
 
     @staticmethod
-    async def _get_guild_entry(guild_id: int, session: AsyncSession) -> Union[DbLog, None]:
+    async def _get_guild_entry(guild_id: int, session: AsyncSession) -> DbLog:
         """Helper method to get a guild entry"""
         result = await session.execute(select(DbLog).filter(DbLog.guild_id == guild_id))
         if result:
             return cast(DbLog, result.scalars().first())
-        return None
+        raise ValueError(f"No guild found with id {guild_id}")
 
     @staticmethod
     async def check_guild(guild_id: int) -> bool:
@@ -57,7 +57,7 @@ class Logs: # Checked and working, finalized
             try:
                 entry = await Logs._get_guild_entry(guild_id, session)
                 if entry is None:
-                    return f"Guild with id {guild_id} does not exist."
+                    raise ValueError(f"No guild found with id {guild_id}")
                 await session.delete(entry)
                 await session.commit()
                 return f"Guild with id {guild_id} was removed."
@@ -75,10 +75,6 @@ class Logs: # Checked and working, finalized
         async with session_factory() as session:
             try:
                 guild_entry = DbLog(guild_id=guild_id)
-                if guild_entry is None:
-                    return "No guild entry"
-                if session is None:
-                    return "No session"
                 session.add(guild_entry)
                 await session.commit()
                 return f"Guild with id {guild_id} added to the database successfully."
@@ -121,10 +117,12 @@ class Punishments: # Checked and working, finalized
     """Defines the punishment structure"""
 
     @staticmethod
-    async def _get_punishment_entry(punishment_id: int, session: AsyncSession) -> Union[DbPunishments, None]:
+    async def _get_punishment_entry(punishment_id: int, session: AsyncSession) -> DbPunishments:
         """Helper method to get a punishment entry"""
         result = await session.execute(select(DbPunishments).filter(DbPunishments.punishment_id == punishment_id))
-        return cast(Union[DbPunishments, None], result.scalars().first())
+        if result is not None:
+            return cast(DbPunishments, result.scalars().first())
+        raise ValueError(f"No punishment found with ID {punishment_id}")
 
 
     @staticmethod
