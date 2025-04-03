@@ -21,19 +21,19 @@ async def test_registration() -> None:
     )
     print(result)
 
-    print("\nChecking user entry...")
+    print("Checking user entry...")
     user = await Registration.check_user_entry(user_id)
     print(f"User found: {user is not None}")
 
-    print("\nUpdating user entry...")
+    print("Updating user entry...")
     update_result = await Registration.update_reg_entry(user_id, relationship=str(enums.Relationship.TAKEN))
     print(update_result)
 
-    print("\nDeleting user entry...")
+    print("Deleting user entry...")
     delete_result = await Registration.delete_user_entry(user_id)
     print(delete_result)
 
-    print("\nChecking user entry after deletion...")
+    print("Checking user entry after deletion...")
     user_after_delete = await Registration.check_user_entry(user_id)
     print(f"User found: {user_after_delete is not None}")
 
