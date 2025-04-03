@@ -474,7 +474,7 @@ class Levels:
                 if user:
                     user.xp -= xp
                     await session.commit()
-                    return "XP successfully added"
+                    return "XP successfully removed"
                 return "No user found with that ID for that guild"
             except SQLAlchemyError as e:
                 if session.is_active:
@@ -489,13 +489,15 @@ class Levels:
         """Removes a user from a guild"""
         async with session_factory() as session:
             try:
-                user = (await session.execute(select(DbLvl).filter(DbLvl.guild_id == guild_id, DbLvl.user_id == user_id))).scalars().first()
-                if not isinstance(user, DbLvl):
-                    return "No user found with that ID for that guild."
+                user = (await session.execute(
+                    select(DbLvl).filter(DbLvl.guild_id == guild_id, DbLvl.user_id == user_id))).scalars().first()
+
                 if user:
                     await session.delete(user)
                     await session.commit()
-                    return "User successfully removed."
+                    return "User deleted successfully."
+
+                return "No user found with that ID for that guild."
             except SQLAlchemyError as e:
                 if session.is_active:
                     await session.rollback()
@@ -503,5 +505,3 @@ class Levels:
                 tb_str = traceback.format_exc()
                 await send_error("remove_user_from_guild", f"{str(e)}\n{tb_str}")
                 return "Something went wrong, please check error logs."
-
-
