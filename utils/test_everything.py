@@ -8,7 +8,8 @@ python_files = [
     'test_levels.py',
     'test_logs.py',
     'test_punishments.py',
-    'test_registration.py'
+    'test_registration.py',
+    'test_regroles.py'
 ]
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
