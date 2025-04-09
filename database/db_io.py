@@ -18,7 +18,8 @@ from database.makedb import (
     Punishments as DbPunishments,
     CustomCommands as DbCc,
     Registration as DbReg,
-    Levels as DbLvl,)
+    Levels as DbLvl,
+    RegRoles as DbRr)
 
 
 class Logs: # Checked and working, finalized
@@ -505,3 +506,54 @@ class Levels:
                 tb_str = traceback.format_exc()
                 await send_error("remove_user_from_guild", f"{str(e)}\n{tb_str}")
                 return "Something went wrong, please check error logs."
+
+
+class RegRoles:
+    """Defines the RegRoles structure"""
+
+    @staticmethod
+    async def setup_roles(guild_id: int, **kwargs: Any) -> str:
+        """Adds the roles to the db"""
+        try:
+            async with session_factory() as session:
+                reg_entry = DbRr(
+                    guild_id=guild_id,
+                    **kwargs
+                )
+                session.add(reg_entry)
+                await session.commit()
+                return "Roles successfully added."
+        except SQLAlchemyError as e:
+            if session.is_active:
+                await session.rollback()
+            logger.error("Database error while updating setting up registration roles: %s\nRolling back....", e, exc_info=True)
+            tb_str = traceback.format_exc()
+            await send_error("setup_roles", f"{str(e)}\n{tb_str}")
+            return "Something went wrong, please check error logs."
+
+
+    @staticmethod
+    async def remove_roles(guild_id: int) -> str:
+        """Removes the roles from the db"""
+        try:
+            async with session_factory() as session:
+                entry = (await session.execute(select(DbRr).filter(DbRr.guild_id == guild_id))).scalars().first()
+                if not entry:
+                    return "No guild found with that ID"
+                await session.delete(entry)
+                await session.commit()
+                return "Deletion successful."
+        except SQLAlchemyError as e:
+            if session.is_active:
+                await session.rollback()
+            logger.error("Database error while updating removing registration roles: %s\nRolling back....", e, exc_info=True)
+            tb_str = traceback.format_exc()
+            await send_error("remove_roles", f"{str(e)}\n{tb_str}")
+            return "Something went wrong, please check error logs."
+
+    @staticmethod
+    async def get_roles(guild_id: int) -> Optional[List[int]]:
+        """Gets and returns the roles from the db"""
+        async with session_factory() as session:
+            entry = (await session.execute(select(DbRr).filter(DbRr.guild_id == guild_id))).scalars().first()
+            return entry if entry else None
