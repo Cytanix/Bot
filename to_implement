@@ -1,0 +1,25 @@
+TO IMPLEMENT
+
+IMPORTANT!
+ADD REDIS CACHE
+
+* Sheri API Functionality - SFW only
+* Dukey Stickers (Tele?) - SFW only
+* Levels from FangstersBot
+* Reaction Logging
+* Regular logging from RansasV2
+* Custom Commands
+* e621 commands? - Maybe (SFW only if implemented, per server lock?)
+* Setup commands
+* Info commands
+* Moderation commands
+* Contributors - Custom command or under info command?
+* Spotify track sending? artist and album - Look into this, under `discord.Spotify`
+* YTDLP or LavaLink/Wavelink for music? Make it robust with ipv6 rotation etc, the works
+* Some level of customisation per server
+* AntiRaid from Wick (Look into features and custom make per-server options)
+* Website to config rather than through commands?
+* Reaction Roles
+* Starboard
+* Tupper/PK, with compatible imports and exports
+* Web interface for management, admin panel etc

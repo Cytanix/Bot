@@ -1,0 +1,97 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+*.venv
+Pipfile
+Pipfile.lock
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+*.cover
+coverage.xml
+*.py,cover
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+*.db-journal
+
+# Secrets / Credentials
+.env
+.env.*
+*.pem
+*.key
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# PyCharm / VSCode / Other IDEs
+.idea/
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+
+# Linux
+*~
+.nfs*
+
+# MyPy
+.mypy_cache/
+dmypy.json
+dmypy.json.*/
+
+# Pylint
+pylint.log
+
+# Pytest
+.pytest_cache/
+
+# Profiling
+*.prof
+.prof/
+
+# Alembic migration files (cache and temp files)
+alembic/versions/*.pyc
+alembic/versions/*.pyo
+alembic/versions/__pycache__/
+
+# Asyncpg compiled query cache
+asyncpg_cache/
+
+# SQLAlchemy SQLite migrations
+migrations/
+migrations/versions/*.pyc
+migrations/versions/*.pyo
+migrations/versions/__pycache__/
+
+# Discord.py cache (if using local intents storage)
+discord_cache/
+
+utils/command_count.json
