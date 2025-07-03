@@ -38,5 +38,5 @@ async def test_registration() -> None:
     print(f"User found: {user_after_delete is not None}")
 
 if __name__ == "__main__":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
     asyncio.run(test_registration())

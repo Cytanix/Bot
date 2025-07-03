@@ -66,8 +66,6 @@ class Owner(Cog): # type: ignore
             await ctx.send(f"{user.mention} is **not** a cutie!") # SpiritTheWalf
         elif user.id == 485213817958039573:
             await ctx.send(f"{user.mention} is...\n# THE CUTEST!!!") # NIIC
-        elif user.id == 1186324527932776458:
-            await ctx.send(f"{user.mention} is definitely an adorable cutie foxo!!!") # Mocha.The.Fox
         else:
             await ctx.send(f"{user.mention} is a cutie!")
 

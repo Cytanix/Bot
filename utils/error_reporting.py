@@ -17,7 +17,7 @@ load_dotenv()
 url = os.getenv("MB_URL")
 password = os.getenv("MB_PASSWORD")
 headers = {"Content-Type": "application/json",
-           "User-Agent": "CytanixBot/1.0 (Python AIOHTTP) Coded by Cytanix/SpiritTheWalf"}
+           "User-Agent": "CynixBot/1.0 (Python AIOHTTP) Coded by Cytanix/SpiritTheWalf"}
 
 async def send_error(name: str, error: str) -> Dict[str, str]:
     """This function sends the error report for the given name"""

@@ -43,7 +43,7 @@ async def cog_loader(bot_instance: commands.Bot) -> None:
                 print(traceback.format_exc())
 
 
-class Cytanix(commands.Bot): # type: ignore
+class Cynix(commands.Bot): # type: ignore
     """This is the main bot class."""
     def __init__(self, *args, **kwargs) -> None: # type: ignore
         super().__init__(*args, **kwargs)
@@ -100,10 +100,7 @@ class Cytanix(commands.Bot): # type: ignore
         print(f'Logged in as {self.user.name}')
         print("Ready to recieve commands!")
 
-bot = Cytanix(command_prefix=commands.when_mentioned_or("!"), intents=intents)
+bot = Cynix(command_prefix=commands.when_mentioned_or("!"), intents=intents)
 
-if __name__ == '__main__':
-    if platform.system() == "Windows":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) # type: ignore
-
+if __name__ == "__main__":
     bot.run(os.getenv("TOKEN"))

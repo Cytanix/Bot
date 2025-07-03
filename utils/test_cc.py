@@ -3,7 +3,7 @@ import asyncio
 from typing import Any, Dict
 from database.db_io import CustomCommands
 from database.makedb import CustomCommands as DbCc
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 # Define a test command
 test_command: Dict[str, Any]= {
     "name": "test_command",

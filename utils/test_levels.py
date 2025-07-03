@@ -3,7 +3,7 @@ import asyncio
 from typing import Any, Dict
 from database.db_io import Levels
 from database.makedb import Levels as DbLvl
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 # Define a test user and guild
 TEST_GUILD_ID = 123456789

@@ -4,7 +4,7 @@ import asyncio
 import traceback
 from database.db_io import Punishments
 
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 async def test_punishments() -> None:
     """Function to test the Punishment table functions"""

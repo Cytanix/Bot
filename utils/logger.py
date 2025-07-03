@@ -1,4 +1,4 @@
-"""Custom Logger for Cytanix"""
+"""Custom Logger for Cynix"""
 # Copyright (c) 2025 SpiritTheWalf and Cytanix
 #
 # This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.

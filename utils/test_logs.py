@@ -6,7 +6,7 @@ import asyncio
 from sqlalchemy.exc import SQLAlchemyError
 from database.db_io import Logs as LogsFunc
 from database.makedb import session_factory, Logs
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

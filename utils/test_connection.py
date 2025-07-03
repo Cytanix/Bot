@@ -13,7 +13,7 @@ from database.makedb import session_factory, Logs, engine
 
 
 load_dotenv()
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

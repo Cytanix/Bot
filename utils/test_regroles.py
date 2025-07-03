@@ -2,7 +2,7 @@
 
 import asyncio
 from database.db_io import RegRoles  # Your logic class with setup/get/remove
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 # Replace these with real role IDs for testing or dummy values
 TEST_GUILD_ID = 123456789
