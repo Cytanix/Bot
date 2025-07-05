@@ -7,7 +7,7 @@ import redis.asyncio as redis
 from dotenv import load_dotenv
 load_dotenv()
 
-
+REDIS_BLACKLIST_SET = "blacklist_users"
 _redis_client = None
 
 async def get_redis() -> redis.Redis:
@@ -24,7 +24,7 @@ async def get_redis() -> redis.Redis:
         except Exception as e:
             print(f"Redis connection failed: {e}")
             raise
-        return _redis_client
+    return _redis_client
 
 async def close_redis() -> None:
     global _redis_client
@@ -45,3 +45,10 @@ async def is_user_blacklisted(user_id: int) -> bool:
     redis_client = await get_redis()
     return await redis_client.sismember(REDIS_BLACKLIST_SET, user_id)
 
+async def blacklist_user_redis(user_id: int):
+    redis_client = await get_redis()
+    await redis_client.sadd(REDIS_BLACKLIST_SET, user_id)
+
+async def remove_user_redis(user_id: int):
+    redis_client = await get_redis()
+    await redis_client.srem(REDIS_BLACKLIST_SET, user_id)
