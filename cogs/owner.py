@@ -13,6 +13,7 @@ from discord.ext import commands
 from discord.ext.commands import Cog, ExtensionFailed, Context
 from utils.logger import logger
 from utils.error_reporting import send_error
+from database.db_io import BlacklistedUsers
 
 class Owner(Cog): # type: ignore
     """Owner commands"""
@@ -173,6 +174,30 @@ class Owner(Cog): # type: ignore
         result = await send_error(name=error_name, error=error_message)
         await ctx.message.add_reaction("✅")
         print(result)
+
+    @commands.command(name="blacklist", hidden=True)
+    @commands.is_owner()
+    async def blacklist_add(self, ctx: commands.Context, user_id: int, *, reason: str) -> None:
+        """Add a user to the blacklist"""
+        response = await BlacklistedUsers.blacklist_user(user_id, reason=reason)
+        await ctx.send(response)
+
+    @commands.command(name="unblacklist", hidden=True)
+    @commands.is_owner()
+    async def unblacklist(self, ctx: commands.Context, user_id: int, *, reason: str) -> None:
+        """Remove a user from the blacklist"""
+        response = await BlacklistedUsers.remove_blacklisted_user(user_id, unblacklist_reason=reason)
+        await ctx.send(response)
+
+    @commands.command(name="checkblacklist", hidden=True)
+    @commands.is_owner()
+    async def checkblacklist(self, ctx: commands.Context, user_id: int) -> None:
+        """Check if a user is blacklisted"""
+        response = await BlacklistedUsers.get_blacklisted_user(user_id)
+        if response:
+            await ctx.send(f"User {user_id} has been blacklisted since "
+                           f"{response.date_blacklisted} for reason: {response.reason}.")
+        await ctx.send(f"User {user_id} is not in the blacklist.")
 
 async def setup(bot: commands.Bot) -> None:
     """Setup function for Owner"""
