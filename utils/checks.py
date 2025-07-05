@@ -22,12 +22,12 @@ async def nsfw_endpoint(endpoint: str) -> bool:
         raise NSFWEndpointCalled()
     return False
 
-async def app_not_blacklisted():
+def app_not_blacklisted():
     async def predicate(interaction: discord.Interaction) -> bool:
         return not await is_user_blacklisted(interaction.user.id)
     return app_commands.check(predicate)
 
-async def prefix_not_blacklisted():
+def prefix_not_blacklisted():
     async def predicate(ctx):
         return not await is_user_blacklisted(ctx.author.id)
     return commands.check(predicate)
