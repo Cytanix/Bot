@@ -21,7 +21,7 @@ from database.makedb import (
     Levels as DbLvl,
     RegRoles as DbRr,
     BlacklistedUsers as DbBl,)
-
+from utils.redis import blacklist_user_redis, is_user_blacklisted, remove_user_redis
 
 class Logs: # Checked and working, finalized
     """Defines the log structure"""
@@ -565,9 +565,7 @@ class BlacklistedUsers:
     @staticmethod
     async def is_blacklisted(user_id: int) -> bool:
         """Checks if the user is blacklisted"""
-        async with session_factory() as session:
-            user_entry = (await session.execute(select(DbBl).filter(DbBl.user_id == user_id)).scalars().first())
-            return user_entry is not None
+        return await is_user_blacklisted(user_id)
 
 
     @staticmethod
@@ -583,6 +581,7 @@ class BlacklistedUsers:
                 )
                 session.add(blacklist_entry)
                 await session.commit()
+                await blacklist_user_redis(user_id)
                 return f"Blacklisted user {user_id} for reason: {reason}."
             return "User already in blacklist."
 
@@ -591,23 +590,24 @@ class BlacklistedUsers:
     async def remove_blacklisted_user(user_id: int, unblacklist_reason: str) -> str:
         """Unblacklist a user by updating their record."""
         async with session_factory() as session:
-            result = (await session.execute(select(DbBl).filter(DbBl.user_id == user_id)).scalars().first())
+            result = (await session.execute(select(DbBl).filter(DbBl.user_id == user_id))).scalars().first()
 
-            if not blacklisted_user or blacklisted_user.is_actively_blacklisted is False:
+            if not result or result.is_actively_blacklisted is False:
                 return f"User {user_id} is not currently blacklisted."
 
-            blacklisted_user.is_actively_blacklisted = False
-            blacklisted_user.why_unblacklisted = unblacklist_reason
-            blacklisted_user.date_unblacklisted = dt.now(tz.utc).timestamp()
+            result.is_actively_blacklisted = False
+            result.why_unblacklisted = unblacklist_reason
+            result.date_unblacklisted = dt.now(tz.utc).timestamp()
 
-            session.add(blacklisted_user)
+            session.add(result)
             await session.commit()
+            await remove_user_redis(user_id)
             return f"User {user_id} has been unblacklisted."
 
     @staticmethod
     async def load_all_blacklisted_users() -> Optional[List[Dict[str, Union[str, int]]]]:
         async with session_factory() as session:
-            all_users = (await session.execute(select(DbBl))).scalars().all()
+            all_users = (await session.execute(select(DbBl).filter(DbBl.is_actively_blacklisted == True))).scalars().all()
 
         if not all_users:
             return None
@@ -617,5 +617,5 @@ class BlacklistedUsers:
     @staticmethod
     async def get_blacklisted_user(user_id: int) -> Optional[DbBl]:
         async with session_factory() as session:
-            user_entry = (await session.execute(select(DbBl).filter(DbBl.user_id == user_id)).scalars().first())
+            user_entry = (await session.execute(select(DbBl).filter(DbBl.user_id == user_id))).scalars().first()
             return user_entry if user_entry else None
