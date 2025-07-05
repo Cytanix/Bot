@@ -129,7 +129,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: Exceptio
     if isinstance(error, CheckFailure):
         if await is_user_blacklisted(interaction.user.id):
             await interaction.response.send_message("You are blacklisted from using this bot!\n"
-                                                    "If you feel this is incorrect, please contact"
+                                                    "If you feel this is incorrect, please contact "
                                                     "SpiritTheWalf", ephemeral=True)
 
 if __name__ == "__main__":
