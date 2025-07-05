@@ -5,7 +5,7 @@
 """Contains the functions to interact with the database"""
 import traceback
 from typing import Union, Any, cast, Optional, List
-from datetime import datetime as dt
+from datetime import datetime as dt, timezone as tz
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +19,8 @@ from database.makedb import (
     CustomCommands as DbCc,
     Registration as DbReg,
     Levels as DbLvl,
-    RegRoles as DbRr)
+    RegRoles as DbRr,
+    BlacklistedUsers as DbBl,)
 
 
 class Logs: # Checked and working, finalized
@@ -557,3 +558,49 @@ class RegRoles:
         async with session_factory() as session:
             entry = (await session.execute(select(DbRr).filter(DbRr.guild_id == guild_id))).scalars().first()
             return entry if entry else None
+
+class BlacklistedUsers:
+    """Defines blacklisted users"""
+
+    @staticmethod
+    async def is_blacklisted(user_id: int) -> bool:
+        """Checks if the user is blacklisted"""
+        async with session_factory() as session:
+            user_entry = (await session.execute(select(DbBl).filter(DbBl.user_id == user_id)).scalars().first())
+            return user_entry is not None
+
+
+    @staticmethod
+    async def blacklist_user(user_id: int, reason: str) -> str:
+        """Blacklists a user"""
+        async with session_factory() as session:
+            if not await BlacklistedUsers.is_blacklisted(user_id):
+                blacklist_entry = DbBl(
+                    user_id=user_id,
+                    date_blacklisted=dt.now(tz.utc).timestamp(),
+                    reason=reason,
+                    is_actively_blacklisted=True
+                )
+                session.add(blacklist_entry)
+                await session.commit()
+                return f"Blacklisted user {user_id} for reason: {reason}."
+            return "User already in blacklist."
+
+
+    @staticmethod
+    async def remove_blacklisted_user(user_id: int, unblacklist_reason: str) -> str:
+        """Unblacklist a user by updating their record."""
+        async with session_factory() as session:
+            result = await session.execute(select(DbBl).filter(DbBl.user_id == user_id))
+            blacklisted_user = result.scalars().first()
+
+            if not blacklisted_user or blacklisted_user.is_actively_blacklisted is False:
+                return f"User {user_id} is not currently blacklisted."
+
+            blacklisted_user.is_actively_blacklisted = False
+            blacklisted_user.why_unblacklisted = unblacklist_reason
+            blacklisted_user.date_unblacklisted = dt.now(tz.utc).timestamp()
+
+            session.add(blacklisted_user)
+            await session.commit()
+            return f"User {user_id} has been unblacklisted."

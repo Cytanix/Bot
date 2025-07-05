@@ -8,7 +8,7 @@ import os
 import asyncio
 from datetime import datetime as dt, timezone as tz
 from dotenv import load_dotenv
-from sqlalchemy import Column, BigInteger, String, Boolean, Index, Integer, ForeignKeyConstraint, URL
+from sqlalchemy import Column, BigInteger, String, Boolean, Index, Integer, ForeignKeyConstraint, URL, CheckConstraint
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -148,6 +148,22 @@ class RegRoles(Base): # type: ignore
     position_neither = Column(BigInteger)
 
     log = relationship("Logs", back_populates="reg_role")
+
+class BlacklistedUsers(Base):
+    """Model for the blacklisted users table"""
+    __tablename__ = 'blacklisted_users'
+    __table_args__ = (
+        CheckConstraint(
+            "(is_actively_blacklisted = TRUE) OR (why_unblacklisted IS NOT NULL AND why_unblacklisted != '')",
+            name="check_unblacklisted_reason"
+        ),
+    )
+    user_id = Column(BigInteger, primary_key=True)
+    date_blacklisted = Column(BigInteger, nullable=False)
+    reason = Column(String, nullable=False)
+    is_actively_blacklisted = Column(Boolean, default=True)
+    date_unblacklisted = Column(BigInteger, nullable=True)
+    why_unblacklisted = Column(String, nullable=True)
 
 async def create_tables() -> None:
     """Create the tables"""
