@@ -118,6 +118,8 @@ class Cynix(commands.Bot): # type: ignore
                 await context.send(f"You are blacklisted from using this bot!\n"
                                    f"If you feel this is incorrect, please contact SpiritTheWalf", delete_after=10)
                 await context.message.delete()
+        else:
+            await super().on_command_error(context, exception)
 
 bot = Cynix(command_prefix=commands.when_mentioned_or("!"), intents=intents)
 
