@@ -607,7 +607,7 @@ class BlacklistedUsers:
     @staticmethod
     async def load_all_blacklisted_users() -> Optional[List[Dict[str, Union[str, int]]]]:
         async with session_factory() as session:
-            all_users = (await session.execute(select(DbBl)).scalars().all())
+            all_users = (await session.execute(select(DbBl))).scalars().all()
 
         if not all_users:
             return None
