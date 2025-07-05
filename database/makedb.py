@@ -165,6 +165,17 @@ class BlacklistedUsers(Base):
     date_unblacklisted = Column(BigInteger, nullable=True)
     why_unblacklisted = Column(String, nullable=True)
 
+    def to_dict(self) -> Dict[str, Union[str, int, bool, None]]:
+        return {
+            "user_id": self.user_id,
+            "date_blacklisted": self.date_blacklisted,
+            "reason": self.reason,
+            "is_actively_blacklisted": self.is_actively_blacklisted,
+            "date_unblacklisted": self.date_unblacklisted,
+            "why_unblacklisted": self.why_unblacklisted,
+        }
+
+
 async def create_tables() -> None:
     """Create the tables"""
     async with engine.begin() as conn:
