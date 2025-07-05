@@ -4,7 +4,7 @@
 # To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/ or see the LICENSE file.
 """Contains the functions to interact with the database"""
 import traceback
-from typing import Union, Any, cast, Optional, List
+from typing import Union, Any, cast, Optional, List, Dict
 from datetime import datetime as dt, timezone as tz
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
@@ -591,8 +591,7 @@ class BlacklistedUsers:
     async def remove_blacklisted_user(user_id: int, unblacklist_reason: str) -> str:
         """Unblacklist a user by updating their record."""
         async with session_factory() as session:
-            result = await session.execute(select(DbBl).filter(DbBl.user_id == user_id))
-            blacklisted_user = result.scalars().first()
+            result = (await session.execute(select(DbBl).filter(DbBl.user_id == user_id)).scalars().first())
 
             if not blacklisted_user or blacklisted_user.is_actively_blacklisted is False:
                 return f"User {user_id} is not currently blacklisted."
@@ -604,3 +603,13 @@ class BlacklistedUsers:
             session.add(blacklisted_user)
             await session.commit()
             return f"User {user_id} has been unblacklisted."
+
+    @staticmethod
+    async def load_all_blacklisted_users() -> Optional[List[Dict[str, Union[str, int]]]]:
+        async with session_factory() as session:
+            all_users = (await session.execute(select(DbBl)).scalars().all())
+
+        if not all_users:
+            return None
+
+        return [user.to_dict() for user in all_users] if all_users else None
