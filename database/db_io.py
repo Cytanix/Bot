@@ -613,3 +613,9 @@ class BlacklistedUsers:
             return None
 
         return [user.to_dict() for user in all_users] if all_users else None
+
+    @staticmethod
+    async def get_blacklisted_user(user_id: int) -> Optional[DbBl]:
+        async with session_factory() as session:
+            user_entry = (await session.execute(select(DbBl).filter(DbBl.user_id == user_id)).scalars().first())
+            return user_entry if user_entry else None
