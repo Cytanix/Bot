@@ -13,10 +13,11 @@ import os
 import traceback
 from typing import TYPE_CHECKING
 import discord
+from discord.app_commands import CheckFailure
 from discord.ext import commands
-from discord.ext.commands import ExtensionError
+from discord.ext.commands import ExtensionError, Context, errors
 from dotenv import load_dotenv
-from utils.redis import load_blacklist_from_db, close_redis
+from utils.redis import load_blacklist_from_db, close_redis, is_user_blacklisted
 from database.db_io import BlacklistedUsers
 
 
@@ -105,11 +106,29 @@ class Cynix(commands.Bot): # type: ignore
         print(f'Logged in as {self.user.name}')
         print("Ready to recieve commands!")
 
-    async def on_close(self) -> None:
+    async def close(self) -> None:
         """This function is called when the bot is closed."""
         await close_redis()
+        await super().close()
+
+    async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
+        """This function is called when an error occurs."""
+        if isinstance(exception, CheckFailure):
+            if await is_user_blacklisted(context.author.id):
+                await context.send(f"You are blacklisted from using this bot!\n"
+                                   f"If you feel this is incorrect, please contact SpiritTheWalf", delete_after=10)
+                await context.message.delete()
 
 bot = Cynix(command_prefix=commands.when_mentioned_or("!"), intents=intents)
+
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: Exception) -> None:
+    """This function is called when the bot encountered an error."""
+    if isinstance(error, CheckFailure):
+        if await is_user_blacklisted(interaction.user.id):
+            await interaction.response.send_message("You are blacklisted from using this bot!\n"
+                                                    "If you feel this is incorrect, please contact"
+                                                    "SpiritTheWalf", ephemeral=True)
 
 if __name__ == "__main__":
     bot.run(os.getenv("TOKEN"))
