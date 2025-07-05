@@ -7,6 +7,7 @@
 import os
 import asyncio
 from datetime import datetime as dt, timezone as tz
+from typing import Dict, Union
 from dotenv import load_dotenv
 from sqlalchemy import Column, BigInteger, String, Boolean, Index, Integer, ForeignKeyConstraint, URL, CheckConstraint
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
