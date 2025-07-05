@@ -8,6 +8,7 @@ import os
 import sys
 import traceback
 from typing import Optional
+from datetime import datetime as dt, timezone as tz
 import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, ExtensionFailed, Context
@@ -177,7 +178,7 @@ class Owner(Cog): # type: ignore
 
     @commands.command(name="blacklist", hidden=True)
     @commands.is_owner()
-    async def blacklist_add(self, ctx: commands.Context, user_id: int, *, reason: str) -> None:
+    async def blacklist(self, ctx: commands.Context, user_id: int, *, reason: str) -> None:
         """Add a user to the blacklist"""
         response = await BlacklistedUsers.blacklist_user(user_id, reason=reason)
         await ctx.send(response)
@@ -194,10 +195,12 @@ class Owner(Cog): # type: ignore
     async def checkblacklist(self, ctx: commands.Context, user_id: int) -> None:
         """Check if a user is blacklisted"""
         response = await BlacklistedUsers.get_blacklisted_user(user_id)
-        if response:
-            await ctx.send(f"User {user_id} has been blacklisted since "
-                           f"{response.date_blacklisted} for reason: {response.reason}.")
-        await ctx.send(f"User {user_id} is not in the blacklist.")
+        if response and response.is_actively_blacklisted:
+            date = dt.fromtimestamp(response.date_blacklisted).strftime("%A, %d %B %Y at %H:%M:%S UTC")
+            await ctx.send(f"User {user_id} has been blacklisted since {date} for reason: {response.reason}.")
+        else:
+            await ctx.send(f"User {user_id} is not in the blacklist.")
+
 
 async def setup(bot: commands.Bot) -> None:
     """Setup function for Owner"""
