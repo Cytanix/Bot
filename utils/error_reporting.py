@@ -10,7 +10,6 @@ import aiohttp
 from discord import Webhook, Embed
 from discord.ui import View, Button
 from dotenv import load_dotenv
-from bot import bot
 from .logger import logger
 load_dotenv()
 
@@ -21,6 +20,7 @@ headers = {"Content-Type": "application/json",
 
 async def send_error(name: str, error: str) -> Dict[str, str]:
     """This function sends the error report for the given name"""
+    from bot import bot
     payload = {
         "Expires": None,
         "files": [{
