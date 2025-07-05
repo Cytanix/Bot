@@ -12,11 +12,12 @@ import json
 import os
 import traceback
 from typing import TYPE_CHECKING
-
 import discord
 from discord.ext import commands
 from discord.ext.commands import ExtensionError
 from dotenv import load_dotenv
+from utils.redis import load_blacklist_from_db, close_redis
+from database.db_io import BlacklistedUsers
 
 
 load_dotenv()
@@ -94,11 +95,19 @@ class Cynix(commands.Bot): # type: ignore
     async def setup_hook(self) -> None:
         """This function is called before the bot is ready, to load cogs."""
         await cog_loader(self)
+        user_dicts = await BlacklistedUsers.load_all_blacklisted_users()
+        if user_dicts:
+            await load_blacklist_from_db(user_dicts)
+            print(f"Successfully loaded {len(user_dicts)} blacklisted users.")
 
     async def on_ready(self) -> None:
         """This function is called when the bot is ready."""
         print(f'Logged in as {self.user.name}')
         print("Ready to recieve commands!")
+
+    async def on_close(self) -> None:
+        """This function is called when the bot is closed."""
+        await close_redis()
 
 bot = Cynix(command_prefix=commands.when_mentioned_or("!"), intents=intents)
 
