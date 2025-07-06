@@ -113,7 +113,6 @@ class Levels(Base): # type: ignore
 
     guild_id = Column(BigInteger, primary_key=True)
     user_id = Column(BigInteger, primary_key=True)
-    level = Column(Integer, default=1, nullable=False)
     xp = Column(BigInteger, default=0, nullable=False)
 
 
