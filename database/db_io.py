@@ -114,6 +114,14 @@ class Logs: # Checked and working, finalized
             else:
                 return "The guild does not exist."
 
+    @staticmethod
+    async def get_guild_multiplier(guild_id: int) -> Optional[float]:
+        async with session_factory() as session:
+            result = (await session.execute(
+                select(DbLog.xp_multiplier).filter(DbLog.guild_id == guild_id))
+                      ).scalars().one_or_none()
+            return result if result is not None else None
+
 
 class Punishments: # Checked and working, finalized
     """Defines the punishment structure"""
