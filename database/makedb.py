@@ -52,6 +52,7 @@ class Logs(Base): # type: ignore
     muterole = Column(BigInteger)
     muterole_channel = Column(BigInteger)
     reaction_logging = Column(BigInteger)
+    xp_multiplier = Column(Float, default=1.0)
 
     reg_role = relationship("RegRoles", back_populates="log", uselist=False, cascade="all, delete")
 
@@ -114,7 +115,6 @@ class Levels(Base): # type: ignore
     user_id = Column(BigInteger, primary_key=True)
     level = Column(Integer, default=1, nullable=False)
     xp = Column(BigInteger, default=0, nullable=False)
-    multiplier = Column(Float, default=1.0)
 
 
 class RegRoles(Base): # type: ignore
