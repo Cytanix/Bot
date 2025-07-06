@@ -107,7 +107,6 @@ class Levels(Base): # type: ignore
     __table_args__ = (
         Index('ix_user_guild', 'user_id', 'guild_id'),
         Index('ix_guild', 'guild_id'),
-        ForeignKeyConstraint(["user_id"], ["registrations.user_id"], ondelete="CASCADE"),
         ForeignKeyConstraint(["guild_id"], ["logs.guild_id"]),
     )
 
